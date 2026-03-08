@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Native Biometric Management</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <div class="container">
+        <div class="glass-card">
+            <div class="icon-container">
+                👆
+            </div>
+            <div class="header">
+                <h1>Biometric Registry</h1>
+                <p>Register and manage native hardware fingerprints directly on this device without external sensors.
+                </p>
+            </div>
+
+            <div class="input-group">
+                <label for="username">Username / Identifier</label>
+                <input type="text" id="username" placeholder="e.g. resident_001" required>
+            </div>
+
+            <button class="btn btn-primary" id="register-btn">
+                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm14 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z">
+                    </path>
+                </svg>
+                Register Device Fingerprint
+            </button>
+
+            <button class="btn btn-outline" id="authenticate-btn" style="margin-top: 1rem;">
+                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
+                    </path>
+                </svg>
+                Verify Fingerprint
+            </button>
+
+            <div id="status-message" class="status-box"></div>
+
+            <div class="registered-list" id="registered-list">
+                <h3 style="font-size: 1rem; margin-bottom: 1rem;">Registered Devices</h3>
+                <div id="list-container">
+                    <!-- Dynamic List Populated via JS -->
+                    <div style="color: var(--text-muted); font-size: 0.85rem; text-align: center;">No fingerprints
+                        registered yet.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
