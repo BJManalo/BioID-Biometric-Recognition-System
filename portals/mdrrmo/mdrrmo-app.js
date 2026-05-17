@@ -343,6 +343,13 @@ document.addEventListener('DOMContentLoaded', () => {
     navBtns.forEach(btn => {
         btn.addEventListener('click', (e) => {
             e.preventDefault();
+
+            // Mobile Sidebar Auto-close
+            if (window.innerWidth <= 768) {
+                sidebar.classList.remove("active");
+                if (sidebarBtn) sidebarBtn.classList.replace("bx-menu-alt-right", "bx-menu");
+            }
+
             // Remove active class from all links
             navBtns.forEach(b => b.classList.remove('active'));
             // Add active class to clicked link
@@ -370,11 +377,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 setTimeout(() => map.invalidateSize(), 50);
             }
 
-            // Mobile Sidebar Auto-close
-            if (window.innerWidth <= 768) {
-                sidebar.classList.remove("active");
-                sidebarBtn.classList.replace("bx-menu-alt-right", "bx-menu");
-            }
+
         });
     });
 

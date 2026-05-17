@@ -254,7 +254,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             // Mobile Sidebar Auto-close
-            if (window.innerWidth <= 768 && sidebar.classList.contains("active")) {
+            if (window.innerWidth <= 768) {
                 sidebar.classList.remove("active");
                 if (sidebarBtn) sidebarBtn.classList.replace("bx-menu-alt-right", "bx-menu");
             }
