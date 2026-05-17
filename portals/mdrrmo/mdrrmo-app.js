@@ -1163,6 +1163,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (loadedReports.length > 0) {
             updateMapMarkers(loadedReports);
         }
+        // Force map to recalculate size to fix gray/blank map issue
+        setTimeout(() => {
+            map.invalidateSize();
+        }, 200);
     }, 100);
 
 });
