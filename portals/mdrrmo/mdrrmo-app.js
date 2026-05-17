@@ -68,6 +68,28 @@ function showCustomConfirm(message, title = 'Confirm', onConfirmCallback) {
 
 document.addEventListener('DOMContentLoaded', () => {
 
+    // MAP: Dynamic Local Incident Map
+    const municipalityCoordinates = {
+        'Anini-y': [10.4333, 121.9333],
+        'Barbaza': [11.2333, 122.0167],
+        'Belison': [10.8333, 121.9667],
+        'Bugasong': [11.0500, 122.0667],
+        'Caluya': [12.0667, 121.4000],
+        'Culasi': [11.4333, 122.0500],
+        'Hamtic': [10.7000, 121.9833],
+        'Laua-an': [11.1333, 122.0333],
+        'Libertad': [11.7833, 121.9167],
+        'Pandan': [11.7167, 122.1000],
+        'Patnongon': [10.8833, 121.9833],
+        'San Jose de Buenavista': [10.7500, 121.9333],
+        'San Remigio': [10.9833, 122.1167],
+        'Sebaste': [11.6000, 122.0833],
+        'Sibalom': [10.7833, 122.0167],
+        'Tibiao': [11.2833, 122.0500],
+        'Tobias Fornier': [10.5167, 121.9500],
+        'Valderrama': [11.0000, 122.1333]
+    };
+
     // --- SUPABASE INITIALIZATION ---
     const supabaseUrl = 'https://tzsglayusbbaajvsohtn.supabase.co';
     const supabaseKey = 'sb_publishable_fKtzX1kqT-2Qfi2j_aQoUQ_8dZFCmIa';
@@ -973,27 +995,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // MAP: Dynamic Local Incident Map
-    const municipalityCoordinates = {
-        'Anini-y': [10.4333, 121.9333],
-        'Barbaza': [11.2333, 122.0167],
-        'Belison': [10.8333, 121.9667],
-        'Bugasong': [11.0500, 122.0667],
-        'Caluya': [12.0667, 121.4000],
-        'Culasi': [11.4333, 122.0500],
-        'Hamtic': [10.7000, 121.9833],
-        'Laua-an': [11.1333, 122.0333],
-        'Libertad': [11.7833, 121.9167],
-        'Pandan': [11.7167, 122.1000],
-        'Patnongon': [10.8833, 121.9833],
-        'San Jose de Buenavista': [10.7500, 121.9333],
-        'San Remigio': [10.9833, 122.1167],
-        'Sebaste': [11.6000, 122.0833],
-        'Sibalom': [10.7833, 122.0167],
-        'Tibiao': [11.2833, 122.0500],
-        'Tobias Fornier': [10.5167, 121.9500],
-        'Valderrama': [11.0000, 122.1333]
-    };
+
 
     const markers = [];
     async function updateMapMarkers(reports) {
