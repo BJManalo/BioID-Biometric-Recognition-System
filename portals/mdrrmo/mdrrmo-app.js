@@ -68,6 +68,8 @@ function showCustomConfirm(message, title = 'Confirm', onConfirmCallback) {
 
 document.addEventListener('DOMContentLoaded', () => {
 
+    let map;
+
     // MAP: Dynamic Local Incident Map
     const municipalityCoordinates = {
         'Anini-y': [10.4333, 121.9333],
@@ -1102,24 +1104,23 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- INITIAL LOAD & SUBSCRIPTIONS ---
-    fetchAndRenderReports();
+    loadReports();
 
     supabase
         .channel('public:accident_reports_mdrrmo')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'accident_reports' }, payload => {
             // Only refetch if the payload is for our municipality (or it's a generic update/delete we should check)
             if (payload.new && payload.new.jurisdiction === activeMunicipality) {
-                fetchAndRenderReports();
+                loadReports();
             } else if (payload.old) {
                 // If it was ours before, we should refetch to be sure
-                fetchAndRenderReports();
+                loadReports();
             }
         })
         .subscribe();
 
 
 
-    let map;
     // Delay initialization slightly to ensure container is rendered if active
     setTimeout(() => {
         // Get coordinates for active municipality, fallback to Barbaza
