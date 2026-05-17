@@ -979,6 +979,10 @@ document.addEventListener('DOMContentLoaded', () => {
         markers.length = 0;
 
         for (const r of reports) {
+            // Only show Severe and Critical accidents on the map
+            if (r.severity !== 'Critical' && r.severity !== 'Severe') {
+                continue;
+            }
             let coords = null;
 
             // If coords exist in DB, use them
