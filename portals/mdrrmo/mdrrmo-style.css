@@ -328,10 +328,15 @@ body {
     gap: 20px;
 }
 
-.chart-container,
+.chart-container {
+    height: 380px; /* Reduced to fit better on desktop */
+    display: flex;
+    flex-direction: column;
+    padding: 25px !important;
+}
+
 .map-container {
     height: 550px;
-    /* Reduced from 650 to match clean UI */
     display: flex;
     flex-direction: column;
     padding: 25px !important;
