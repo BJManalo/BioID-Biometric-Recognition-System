@@ -307,15 +307,15 @@ input:checked+.slider:before {
 
 /* Profile Details & Menu Overrides to fix Desktop UI and Dropdown visibility */
 .profile-details {
-    width: auto !important;
-    height: 38px !important; /* Fixed height for header consistency */
+    width: 38px !important;
+    height: 38px !important; /* Fixed size for icon-only look */
     overflow: visible !important;
-    padding: 0 12px !important;
+    padding: 0 !important;
     background: #F8FAFC !important;
     border: 1px solid #E2E8F0 !important;
     display: flex !important;
     align-items: center !important;
-    gap: 10px !important;
+    justify-content: center !important;
     border-radius: 8px !important;
 }
 
@@ -324,17 +324,6 @@ input:checked+.slider:before {
     height: 28px !important;
     border-radius: 6px !important;
     object-fit: cover !important;
-}
-
-.profile-details .admin_name {
-    display: inline-block !important;
-    max-width: 100px; /* Smaller max-width for mobile/small screens */
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    font-size: 14px;
-    font-weight: 600;
-    color: #1E293B;
 }
 
 .profile-menu {
