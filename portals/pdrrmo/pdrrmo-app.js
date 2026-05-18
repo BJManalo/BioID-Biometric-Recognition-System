@@ -248,9 +248,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 setTimeout(() => map.invalidateSize(), 50);
             }
 
-            // Fetch admins when opening accounts tab
+            // Fetch accounts when opening accounts tab
             if (btn.dataset.tab === 'accounts') {
-                fetchAdmins();
+                fetchAccounts();
             }
 
             // Mobile Sidebar Auto-close
@@ -309,50 +309,186 @@ document.addEventListener('DOMContentLoaded', () => {
     const mdrrmoTableBody = document.getElementById('mdrrmoTableBody');
     let editingRow = null;
 
-// 3. FETCH ADMINS ON LOAD
-    async function fetchAdmins() {
+    // --- UNIFIED ACCOUNTS LOGIC ---
+    const accountsTableBody = document.getElementById('accountsTableBody');
+    const searchAccountsInput = document.getElementById('searchAccounts');
+    const filterMunicipalitySelect = document.getElementById('filterMunicipality');
+    const accountTabBtns = document.querySelectorAll('.account-tab-btn');
+
+    async function fetchAccounts() {
+        const activeTabBtn = document.querySelector('.account-tab-btn.active');
+        const role = activeTabBtn ? activeTabBtn.dataset.role : 'all';
+        const searchQuery = searchAccountsInput ? searchAccountsInput.value.trim() : '';
+        const filterMuni = filterMunicipalitySelect ? filterMunicipalitySelect.value : '';
+
+        if (!accountsTableBody) return;
+
+        accountsTableBody.innerHTML = `
+            <tr>
+                <td colspan="6" style="text-align: center; padding: 30px; color: #64748B;">
+                    <i class='bx bx-loader-alt bx-spin' style="font-size: 24px; display: block; margin-bottom: 10px;"></i>
+                    Loading accounts...
+                </td>
+            </tr>
+        `;
+
         try {
-            const { data, error } = await supabase
-                .from('system_users')
-                .select('*')
-                .eq('role', 'MDRRMO');
+            let accounts = [];
 
-            if (error) throw error;
+            // Fetch from system_users (MDRRMO, Police, PDRRMO)
+            if (role === 'all' || role === 'mdrrmo' || role === 'police') {
+                let query = supabase.from('system_users').select('*');
+                
+                if (role !== 'all') {
+                    query = query.eq('role', role.toUpperCase());
+                }
+                
+                if (filterMuni) {
+                    query = query.eq('assigned_municipality', filterMuni);
+                }
 
-            // Clear current rows except empty state
-            mdrrmoTableBody.querySelectorAll('tr:not(#emptyAdminRow)').forEach(e => e.remove());
-
-            if (data && data.length > 0) {
-                data.forEach(admin => {
-                    const newRow = document.createElement('tr');
-                    newRow.innerHTML = `
-                        <td>
-                            <div style="font-weight: 600; color: #1E293B;">${admin.first_name} ${admin.last_name}</div>
-                            <div style="font-size: 12px; color: #64748B;">@${admin.username || 'no-username'}</div>
-                        </td>
-                        <td>
-                            <div style="display: flex; align-items: center; gap: 10px;">
-                                <span class="badge badge-jurisdiction">${admin.assigned_municipality}</span>
-                            </div>
-                        </td>
-                        <td>${admin.contact_number || 'N/A'}</td>
-                        <td><span class="badge badge-active">${admin.status}</span></td>
-                        <td>
-                            <button class="btn-icon btn-edit" data-id="${admin.id}" data-username="${admin.username || ''}"><i class='bx bx-edit-alt'></i></button>
-                            <button class="btn-icon btn-delete" data-id="${admin.id}"><i class='bx bx-trash'></i></button>
-                        </td>
-                    `;
-                    mdrrmoTableBody.prepend(newRow);
-                });
+                const { data, error } = await query;
+                if (error) throw error;
+                
+                if (data) {
+                    accounts = accounts.concat(data.map(u => ({
+                        id: u.id,
+                        name: `${u.first_name} ${u.last_name}`,
+                        username: u.username,
+                        role: u.role,
+                        municipality: u.assigned_municipality,
+                        contact: u.contact_number,
+                        status: u.status
+                    })));
+                }
             }
-            updateAdminCount();
+
+            // Fetch from residents
+            if (role === 'all' || role === 'resident') {
+                let query = supabase.from('residents').select('*');
+                
+                if (filterMuni) {
+                    query = query.eq('municipality', filterMuni);
+                }
+
+                const { data, error } = await query;
+                if (error) throw error;
+                
+                if (data) {
+                    accounts = accounts.concat(data.map(r => ({
+                        id: r.id,
+                        name: `${r.first_name} ${r.last_name}`,
+                        username: r.username,
+                        role: 'RESIDENT',
+                        municipality: r.municipality,
+                        contact: r.contact_number,
+                        status: 'Active'
+                    })));
+                }
+            }
+
+            // Apply Search Filter locally
+            if (searchQuery) {
+                const lowerQuery = searchQuery.toLowerCase();
+                accounts = accounts.filter(a => 
+                    a.name.toLowerCase().includes(lowerQuery) || 
+                    a.username.toLowerCase().includes(lowerQuery)
+                );
+            }
+
+            // Render Rows
+            accountsTableBody.innerHTML = '';
+            
+            if (accounts.length === 0) {
+                accountsTableBody.innerHTML = `
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 30px; color: #64748B;">
+                            <i class='bx bx-user-x' style="font-size: 24px; display: block; margin-bottom: 10px;"></i>
+                            No accounts found matching the criteria.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            accounts.forEach(account => {
+                const row = document.createElement('tr');
+                let roleColor = '#64748B';
+                if (account.role === 'MDRRMO') roleColor = '#FF9800';
+                if (account.role === 'POLICE') roleColor = '#2196F3';
+                if (account.role === 'RESIDENT') roleColor = '#10B981';
+
+                row.innerHTML = `
+                    <td>
+                        <div style="font-weight: 600; color: #1E293B;">${account.name}</div>
+                    </td>
+                    <td>@${account.username || 'no-username'}</td>
+                    <td><span class="badge" style="background: ${roleColor}20; color: ${roleColor}; font-weight: 600;">${account.role}</span></td>
+                    <td>${account.municipality || 'N/A'}</td>
+                    <td>${account.contact || 'N/A'}</td>
+                    <td>
+                        <button class="btn-icon btn-view" data-id="${account.id}"><i class='bx bx-show'></i></button>
+                    </td>
+                `;
+                accountsTableBody.appendChild(row);
+            });
+
+            // Update Dashboard Count for MDRRMO
+            const mdrrmoCount = accounts.filter(a => a.role === 'MDRRMO').length;
+            const countDisplay = document.getElementById('adminCount');
+            if (countDisplay) countDisplay.textContent = mdrrmoCount;
+
         } catch (err) {
-            console.error('Error fetching admins:', err);
+            console.error('Error fetching accounts:', err);
+            accountsTableBody.innerHTML = `
+                <tr>
+                    <td colspan="6" style="text-align: center; padding: 30px; color: #EF4444;">
+                        <i class='bx bx-error-circle' style="font-size: 24px; display: block; margin-bottom: 10px;"></i>
+                        Error loading accounts: ${err.message}
+                    </td>
+                </tr>
+            `;
         }
-    };
+    }
+
+    // Tab Switching for Accounts
+    accountTabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            accountTabBtns.forEach(b => {
+                b.classList.remove('active');
+                b.style.background = '#F1F5F9';
+                b.style.color = '#64748B';
+            });
+            btn.classList.add('active');
+            btn.style.background = '#10B981';
+            btn.style.color = '#fff';
+            fetchAccounts();
+        });
+    });
+
+    // Search and Filter Events
+    if (searchAccountsInput) {
+        searchAccountsInput.addEventListener('input', debounce(() => fetchAccounts(), 300));
+    }
+    if (filterMunicipalitySelect) {
+        filterMunicipalitySelect.addEventListener('change', () => fetchAccounts());
+    }
+
+    // Debounce helper
+    function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
 
     // Initialize Fetch
-    fetchAdmins();
+    fetchAccounts();
 
     cancelFormBtn.addEventListener('click', () => {
         accountForm.style.display = 'none';
