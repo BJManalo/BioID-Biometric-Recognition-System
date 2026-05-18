@@ -308,19 +308,27 @@ input:checked+.slider:before {
 /* Profile Details & Menu Overrides to fix Desktop UI and Dropdown visibility */
 .profile-details {
     width: auto !important;
-    height: auto !important;
+    height: 38px !important; /* Fixed height for header consistency */
     overflow: visible !important;
-    padding: 6px 12px !important;
+    padding: 0 12px !important;
     background: #F8FAFC !important;
     border: 1px solid #E2E8F0 !important;
     display: flex !important;
     align-items: center !important;
     gap: 10px !important;
+    border-radius: 8px !important;
+}
+
+.profile-details img {
+    width: 28px !important;
+    height: 28px !important;
+    border-radius: 6px !important;
+    object-fit: cover !important;
 }
 
 .profile-details .admin_name {
     display: inline-block !important;
-    max-width: 150px;
+    max-width: 100px; /* Smaller max-width for mobile/small screens */
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -330,7 +338,7 @@ input:checked+.slider:before {
 }
 
 .profile-menu {
-    top: 50px !important;
+    top: 45px !important;
     right: 0 !important;
     border-radius: 12px !important;
     box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
