@@ -304,3 +304,35 @@ input:checked+.slider:before {
 .btn-primary:active {
     transform: scale(0.98);
 }
+
+/* Profile Details & Menu Overrides to fix Desktop UI and Dropdown visibility */
+.profile-details {
+    width: auto !important;
+    height: auto !important;
+    overflow: visible !important;
+    padding: 6px 12px !important;
+    background: #F8FAFC !important;
+    border: 1px solid #E2E8F0 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+}
+
+.profile-details .admin_name {
+    display: inline-block !important;
+    max-width: 150px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 14px;
+    font-weight: 600;
+    color: #1E293B;
+}
+
+.profile-menu {
+    top: 50px !important;
+    right: 0 !important;
+    border-radius: 12px !important;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+    border: 1px solid #E2E8F0 !important;
+}
