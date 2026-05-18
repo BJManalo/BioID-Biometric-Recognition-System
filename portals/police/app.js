@@ -167,6 +167,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         profileMenu.classList.remove('show');
     };
 
+    const sidebarSettingsBtn = document.getElementById('sidebarSettingsBtn');
+    if (sidebarSettingsBtn) {
+        sidebarSettingsBtn.onclick = (e) => {
+            e.preventDefault();
+            settingsModal.style.display = 'flex';
+        };
+    }
+
+
     closeSettingsBtn.onclick = () => {
         settingsModal.style.display = 'none';
     };

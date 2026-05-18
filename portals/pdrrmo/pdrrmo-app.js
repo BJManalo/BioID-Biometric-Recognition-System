@@ -91,6 +91,29 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
+        const sidebarSettingsBtn = document.getElementById('sidebarSettingsBtn');
+        if (sidebarSettingsBtn) {
+            sidebarSettingsBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                settingsModal.style.display = 'flex';
+
+                // Pre-fill user data
+                if (activeUser) {
+                    document.getElementById('settingsUsername').value = activeUser.username || '';
+                    document.getElementById('settingsFirstName').value = activeUser.first_name || '';
+                    document.getElementById('settingsLastName').value = activeUser.last_name || '';
+                    document.getElementById('settingsContact').value = activeUser.contact_number || '';
+                    
+                    const pwdInput = document.getElementById('settingsPassword');
+                    if (pwdInput) {
+                        pwdInput.value = activeUser.temp_password || '';
+                        pwdInput.type = 'text'; // Show by default
+                    }
+                }
+            });
+        }
+
+
         closeSettingsModal.addEventListener('click', () => {
             settingsModal.style.display = 'none';
         });

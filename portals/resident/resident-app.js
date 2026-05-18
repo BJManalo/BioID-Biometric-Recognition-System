@@ -301,6 +301,15 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
+    const sidebarSettingsBtn = document.getElementById('sidebarSettingsBtn');
+    if (sidebarSettingsBtn) {
+        sidebarSettingsBtn.onclick = (e) => {
+            e.preventDefault();
+            populateSettingsModal();
+            if (settingsModal) settingsModal.classList.add('show');
+        };
+    }
+
     // --- SIDEBAR TOGGLE ---
     const sidebar = document.querySelector(".sidebar");
     const sidebarBtn = document.querySelector(".sidebarBtn");
