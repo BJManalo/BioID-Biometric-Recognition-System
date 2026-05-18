@@ -120,16 +120,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     const profileBtn = document.getElementById('profileDropdownBtn');
     const profileMenu = document.getElementById('profileMenu');
 
-    profileBtn.onclick = (e) => {
-        e.stopPropagation();
-        profileMenu.classList.toggle('show');
-    };
+    if (profileBtn && profileMenu) {
+        profileBtn.onclick = (e) => {
+            e.stopPropagation();
+            profileMenu.classList.toggle('show');
+        };
 
-    window.onclick = (event) => {
-        if (!event.target.closest('.profile-details')) {
-            profileMenu.classList.remove('show');
-        }
-    };
+        window.onclick = (event) => {
+            if (!event.target.closest('.profile-details')) {
+                profileMenu.classList.remove('show');
+            }
+        };
+    }
 
     // 4. SETTINGS MODAL LOGIC
     const openSettingsBtn = document.getElementById('openSettingsBtn');
