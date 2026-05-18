@@ -197,115 +197,78 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // --- PORTAL CREDENTIALS MGMT ---
-    const editBtn = document.getElementById('edit-credentials-btn');
-    const saveBtn = document.getElementById('save-credentials-btn');
-    const cancelBtn = document.getElementById('cancel-credentials-btn');
-    const viewMode = document.getElementById('credential-view-mode');
-    const editMode = document.getElementById('credential-edit-mode');
-    
-    const displayUser = document.getElementById('display-username');
-    const displayPass = document.getElementById('display-password');
-    const inputUser = document.getElementById('edit-username');
-    const inputPass = document.getElementById('edit-password');
-
-    const toggleViewPass = document.getElementById('toggle-view-password');
-    const toggleEditPass = document.getElementById('toggle-edit-password');
+    // --- PORTAL CREDENTIALS MGMT (MODAL) ---
+    const settingsModal = document.getElementById('settingsModal');
+    const settingsForm = document.getElementById('settingsForm');
+    const settingsUsernameInput = document.getElementById('settingsUsername');
+    const settingsPasswordInput = document.getElementById('settingsPassword');
+    const toggleSettingsPass = document.getElementById('toggleSettingsPassword');
 
     // Initial load of values
     const resident = JSON.parse(sessionStorage.getItem('activeUserData'));
-    if (resident) {
-        displayUser.textContent = resident.username;
-        inputUser.value = resident.username;
-        inputPass.value = resident.password;
+    
+    const populateSettingsModal = () => {
+        if (resident) {
+            if (settingsUsernameInput) settingsUsernameInput.value = resident.username || '';
+            if (settingsPasswordInput) settingsPasswordInput.value = resident.password || '';
+        }
+    };
+
+    // Toggle Password Visibility in Modal
+    if (toggleSettingsPass) {
+        toggleSettingsPass.onclick = () => {
+            if (settingsPasswordInput) {
+                const type = settingsPasswordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                settingsPasswordInput.setAttribute('type', type);
+                toggleSettingsPass.className = type === 'password' ? 'bx bx-hide' : 'bx bx-show';
+            }
+        };
     }
 
-    // Toggle Password Visibility in View Mode
-    let isPassVisible = false;
-    toggleViewPass.onclick = () => {
-        isPassVisible = !isPassVisible;
-        displayPass.textContent = isPassVisible ? resident.password : '••••••••';
-        toggleViewPass.className = isPassVisible ? 'bx bx-hide' : 'bx bx-show';
-        toggleViewPass.style.color = isPassVisible ? '#94A3B8' : 'var(--resident-primary)';
-    };
+    // Handle Form Submit
+    if (settingsForm) {
+        settingsForm.onsubmit = async (e) => {
+            e.preventDefault();
+            const newUsername = settingsUsernameInput.value.trim();
+            const newPassword = settingsPasswordInput.value;
 
-    // Toggle Password Visibility in Edit Mode
-    toggleEditPass.onclick = () => {
-        const type = inputPass.getAttribute('type') === 'password' ? 'text' : 'password';
-        inputPass.setAttribute('type', type);
-        toggleEditPass.className = type === 'password' ? 'bx bx-hide' : 'bx bx-show';
-    };
-
-    editBtn.onclick = () => {
-        viewMode.classList.add('d-none');
-        editMode.classList.remove('d-none');
-        editBtn.classList.add('d-none');
-        saveBtn.classList.remove('d-none');
-        cancelBtn.classList.remove('d-none');
-    };
-
-    cancelBtn.onclick = () => {
-        viewMode.classList.remove('d-none');
-        editMode.classList.add('d-none');
-        editBtn.classList.remove('d-none');
-        saveBtn.classList.add('d-none');
-        cancelBtn.classList.add('d-none');
-        // Reset inputs
-        inputUser.value = resident.username;
-        inputPass.value = resident.password;
-    };
-
-    saveBtn.onclick = async () => {
-        const newUsername = inputUser.value.trim();
-        const newPassword = inputPass.value;
-
-        if (!newUsername || !newPassword) {
-            alert("Username and password cannot be empty.");
-            return;
-        }
-
-        if (!resident || !resident.id) {
-            console.error("Resident ID missing from session. Cannot update.", resident);
-            alert("Session issue: Resident ID missing. Please log out and back in.");
-            saveBtn.disabled = false;
-            saveBtn.innerHTML = "Update";
-            return;
-        }
-
-        try {
-            const { data, error } = await supabase
-                .from('residents')
-                .update({ 
-                    username: newUsername, 
-                    password: newPassword 
-                })
-                .eq('id', resident.id)
-                .select();
-
-            if (!error) {
-                // Update local storage
-                resident.username = newUsername;
-                resident.password = newPassword;
-                sessionStorage.setItem('activeUserData', JSON.stringify(resident));
-                
-                // Update display
-                displayUser.textContent = newUsername;
-                displayPass.textContent = isPassVisible ? newPassword : '••••••••';
-                
-                // Switch back to view mode
-                cancelBtn.onclick();
-                alert("Credentials updated successfully!");
-            } else {
-                alert(error.message || "Failed to update credentials.");
+            if (!newUsername || !newPassword) {
+                alert("Username and password cannot be empty.");
+                return;
             }
-        } catch (err) {
-            console.error("Save error:", err);
-            alert("Connection error or Supabase misconfiguration.");
-        } finally {
-            saveBtn.disabled = false;
-            saveBtn.innerHTML = "Save Changes";
-        }
-    };
+
+            if (!resident || !resident.id) {
+                alert("Session issue: Resident ID missing. Please log out and back in.");
+                return;
+            }
+
+            try {
+                const { data, error } = await supabase
+                    .from('residents')
+                    .update({ 
+                        username: newUsername, 
+                        password: newPassword 
+                    })
+                    .eq('id', resident.id)
+                    .select();
+
+                if (!error) {
+                    // Update local storage
+                    resident.username = newUsername;
+                    resident.password = newPassword;
+                    sessionStorage.setItem('activeUserData', JSON.stringify(resident));
+                    
+                    alert("Credentials updated successfully!");
+                    if (settingsModal) settingsModal.classList.remove('show');
+                } else {
+                    alert(error.message || "Failed to update credentials.");
+                }
+            } catch (err) {
+                console.error("Save error:", err);
+                alert("Connection error or Supabase misconfiguration.");
+            }
+        };
+    }
 
     // --- PROFILE DROPDOWN ---
     const profileDropdownBtn = document.getElementById('profileDropdownBtn');
@@ -332,8 +295,9 @@ document.addEventListener('DOMContentLoaded', () => {
         settingsDropdownBtn.onclick = (e) => {
             e.preventDefault();
             e.stopPropagation();
-            const settingsTabBtn = document.querySelector('.nav-btn[data-tab="settings"]');
-            if (settingsTabBtn) settingsTabBtn.click();
+            populateSettingsModal();
+            if (settingsModal) settingsModal.classList.add('show');
+            if (profileMenu) profileMenu.classList.remove('show'); // Close dropdown
         };
     }
 
