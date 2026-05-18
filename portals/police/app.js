@@ -57,7 +57,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (profileNameEl) profileNameEl.textContent = `Officer ${activeUserData.last_name}`;
     document.getElementById('municipalityBadge').textContent = `Jurisdiction: ${assignedJurisdiction}`;
     document.getElementById('jurisdictionTitle').textContent = assignedJurisdiction;
-    document.getElementById('profileImg').src = `https://ui-avatars.com/api/?name=${activeUserData.first_name}+${activeUserData.last_name}&background=103155&color=fff`;
+    
+    const profileImgEl = document.getElementById('profileImg');
+    if (profileImgEl) {
+        profileImgEl.src = `https://ui-avatars.com/api/?name=${activeUserData.first_name}+${activeUserData.last_name}&background=103155&color=fff`;
+    }
 
     const muniTexts = document.querySelectorAll('.dynamic-muni');
     muniTexts.forEach(el => el.textContent = assignedJurisdiction);
