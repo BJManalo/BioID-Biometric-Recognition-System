@@ -331,7 +331,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // MOCK ACCOUNT CREATION AND EDITING HANDLING
     const saveAccountBtn = document.getElementById('saveAccountBtn');
-    let editingRow = null;
 
     // --- UNIFIED ACCOUNTS LOGIC ---
     const accountsTableBody = document.getElementById('accountsTableBody');
@@ -433,7 +432,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td>
                         <div style="display: flex; gap: 8px;">
                             ${account.role === 'POLICE' ? `
-                                <button class="btn-icon btn-edit" data-id="${account.id}" data-username="${account.username}"><i class='bx bx-edit'></i></button>
                                 <button class="btn-icon btn-delete" data-id="${account.id}"><i class='bx bx-trash'></i></button>
                             ` : `
                                 <button class="btn-icon btn-view" data-id="${account.id}"><i class='bx bx-show'></i></button>
@@ -502,7 +500,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (accountFormModal) accountFormModal.style.display = 'none';
 
         // Reset edit states and clear inputs
-        editingRow = null;
         saveAccountBtn.textContent = 'Create Account';
 
         const officerNameInput = document.getElementById('officerName');
@@ -613,61 +610,33 @@ document.addEventListener('DOMContentLoaded', () => {
         saveAccountBtn.textContent = 'Saving to Database...';
         saveAccountBtn.disabled = true;
 
-        if (editingRow) {
-            const adminId = editingRow.querySelector('.btn-edit').getAttribute('data-id');
-            try {
-                const { data, error } = await supabase
-                    .from('police_accounts')
-                    .update({
-                        username: username,
-                        first_name: firstName,
-                        last_name: lastName,
-                        jurisdiction: municipality,
-                        contact_number: contact
-                    })
-                    .eq('id', adminId)
-                    .select();
+        // DATABASE INSERT - Use Local API
+        try {
+            const { data, error } = await supabase
+                .from('police_accounts')
+                .insert([{
+                    username: username,
+                    first_name: firstName,
+                    last_name: lastName,
+                    jurisdiction: municipality,
+                    contact_number: contact,
+                    temporary_password: tempPassword
+                }])
+                .select();
 
-                if (error) throw error;
+            if (error) throw error;
 
-                await fetchAccounts();
-                alert(`✅ Account updated successfully.`);
-            } catch (err) {
-                console.error("Update error", err);
-                alert("❌ Failed to update account: " + err.message);
-                saveAccountBtn.textContent = originalBtnText;
-                saveAccountBtn.disabled = false;
-                return;
-            }
-        } else {
-            // DATABASE INSERT - Use Local API
-            try {
-                const { data, error } = await supabase
-                    .from('police_accounts')
-                    .insert([{
-                        username: username,
-                        first_name: firstName,
-                        last_name: lastName,
-                        jurisdiction: municipality,
-                        contact_number: contact,
-                        temporary_password: tempPassword
-                    }])
-                    .select();
-
-                if (error) throw error;
-
-                // Sync UI fully with Database
-                const formEl = document.querySelector('.pdrrmo-account-form');
-                if (formEl) formEl.reset();
-                alert(`The Police officer for ${municipality} can now log in securely.`);
-                fetchAccounts();
-            } catch (error) {
-                console.error('Account Creation Error:', error);
-                alert('❌ ' + error.message);
-                saveAccountBtn.textContent = originalBtnText;
-                saveAccountBtn.disabled = false;
-                return;
-            }
+            // Sync UI fully with Database
+            const formEl = document.querySelector('.pdrrmo-account-form');
+            if (formEl) formEl.reset();
+            alert(`The Police officer for ${municipality} can now log in securely.`);
+            fetchAccounts();
+        } catch (error) {
+            console.error('Account Creation Error:', error);
+            alert('❌ ' + error.message);
+            saveAccountBtn.textContent = originalBtnText;
+            saveAccountBtn.disabled = false;
+            return;
         }
 
         // Clean up and hide form
@@ -685,7 +654,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         saveAccountBtn.textContent = 'Create Account';
         saveAccountBtn.disabled = false;
-        editingRow = null;
     });
 
     // Handle Edit and Delete directly from the table rows
@@ -736,33 +704,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     updateAdminCount();
                 }, 300);
             }
-        } else if (btn.classList.contains('btn-edit')) {
-            const officerNameInput = document.getElementById('officerName');
-            const usernameInput = document.getElementById('usernameInput');
-            const contactNumberInput = document.getElementById('contactNumberInput');
-            const municipalitySelect = document.getElementById('municipalitySelect');
-
-            // Populate form with existing data
-            const nameDiv = row.cells[0].querySelector('div');
-            const fullName = nameDiv ? nameDiv.textContent : '';
-            if (officerNameInput) officerNameInput.value = fullName;
-            if (usernameInput) usernameInput.value = btn.getAttribute('data-username');
-            if (municipalitySelect) {
-                const badge = row.cells[1].querySelector('.badge-jurisdiction');
-                municipalitySelect.value = badge ? badge.textContent.trim() : '';
-            }
-            if (contactNumberInput) contactNumberInput.value = row.cells[2].textContent;
-
-            editingRow = row;
-            saveAccountBtn.textContent = 'Update Account';
-
-            // Show form if it isn't already visible
-            if (accountFormModal) accountFormModal.style.display = 'flex';
-            if (municipalitySelect && municipalitySelect.refreshCustomUI) {
-                municipalitySelect.refreshCustomUI();
-            }
-
-            // Modals display fixed in center so no scrolling needed.
         }
     });
 
