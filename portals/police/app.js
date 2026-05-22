@@ -1250,8 +1250,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 blood_type: document.getElementById('resBloodType').value,
                 fingerprint_id: document.getElementById('resFingerprintId').value,
                 medical_info: document.getElementById('resMedical').value,
-                username: document.getElementById('resUsername').value.trim(),
-                password: document.getElementById('resPassword').value.trim()
+                username: '',
+                password: ''
             };
 
             try {
