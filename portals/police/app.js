@@ -56,7 +56,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const profileNameEl = document.getElementById('profileName');
     if (profileNameEl) profileNameEl.textContent = `Officer ${activeUserData.last_name}`;
     document.getElementById('municipalityBadge').textContent = `Jurisdiction: ${assignedJurisdiction}`;
-    document.getElementById('jurisdictionTitle').textContent = assignedJurisdiction;
+    const jurisdictionTitleEl = document.getElementById('jurisdictionTitle');
+    if (jurisdictionTitleEl) jurisdictionTitleEl.textContent = assignedJurisdiction;
     
     const profileImgEl = document.getElementById('profileImg');
     if (profileImgEl) {
@@ -1241,8 +1242,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // Manual Re-connect Button
+    // Manual Re-connect Buttons (scanner status button + fingerprint logo)
     scannerBtn.onclick = () => initScannerConnection(true);
+    const logoFingerprintBtn = document.getElementById('logoFingerprintBtn');
+    if (logoFingerprintBtn) logoFingerprintBtn.onclick = () => initScannerConnection(true);
 
     let enrollAckTimeout = null;
 
