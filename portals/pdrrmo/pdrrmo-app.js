@@ -665,7 +665,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const adminId = btn.getAttribute('data-id');
 
         if (btn.classList.contains('btn-delete')) {
-            if (confirm("Delete?")) {
+            if (await confirm("Delete?")) {
 
                 // If it was pulled from DB, delete from DB first
                 if (adminId) {
