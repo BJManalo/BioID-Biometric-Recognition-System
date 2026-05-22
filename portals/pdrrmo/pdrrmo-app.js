@@ -336,11 +336,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const accountsTableBody = document.getElementById('accountsTableBody');
     const searchAccountsInput = document.getElementById('searchAccounts');
     const filterMunicipalitySelect = document.getElementById('filterMunicipality');
-    const accountTabBtns = document.querySelectorAll('.account-tab-btn');
 
     async function fetchAccounts() {
-        const activeTabBtn = document.querySelector('.account-tab-btn.active');
-        const role = activeTabBtn ? activeTabBtn.dataset.role : 'all';
         const searchQuery = searchAccountsInput ? searchAccountsInput.value.trim() : '';
         const filterMuni = filterMunicipalitySelect ? filterMunicipalitySelect.value : '';
 
@@ -356,11 +353,13 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
 
         try {
+            const searchQuery = searchAccountsInput ? searchAccountsInput.value.toLowerCase() : '';
+            const filterMuni = filterMunicipalitySelect ? filterMunicipalitySelect.value : '';
+
             let accounts = [];
 
             // Fetch from police_accounts
-            if (role === 'all' || role === 'police') {
-                let query = supabase.from('police_accounts').select('*');
+            let query = supabase.from('police_accounts').select('*');
                 
                 if (filterMuni) {
                     query = query.eq('jurisdiction', filterMuni);
@@ -380,7 +379,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         status: u.status || 'Active'
                     })));
                 }
-            }
 
             // Expose globally for auto-fill logic to be instant
             window.allPoliceAccounts = accounts;
@@ -457,20 +455,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Tab Switching for Accounts
-    accountTabBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            accountTabBtns.forEach(b => {
-                b.classList.remove('active');
-                b.style.background = '#F1F5F9';
-                b.style.color = '#64748B';
-            });
-            btn.classList.add('active');
-            btn.style.background = '#10B981';
-            btn.style.color = '#fff';
-            fetchAccounts();
-        });
-    });
+
 
     // Search and Filter Events
     if (searchAccountsInput) {
