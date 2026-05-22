@@ -404,11 +404,15 @@
                         
                         <!-- STATE 1: INITIAL (WAITING) -->
                         <div id="resScannerInitialState">
-                            <span style="display: block; font-size: 13px; color: #0369A1; margin-bottom: 12px; font-weight: 500;">
-                                <i class='bx bx-info-circle'></i> To register, please place the resident's finger on the scanner.
+                            <span id="resScannerInstruction" style="display: block; font-size: 13px; color: #0369A1; margin-bottom: 12px; font-weight: 500;">
+                                <i class='bx bx-info-circle'></i> To register, please place the resident's LEFT THUMB on the scanner.
                             </span>
+                            <div style="display: flex; justify-content: center; gap: 15px; margin-bottom: 15px;">
+                                <div id="thumb1Status" style="padding: 5px 15px; background: #E0F2FE; color: #0284C7; border-radius: 20px; font-size: 12px; font-weight: 600;"><i class='bx bx-time'></i> Left Thumb Pending</div>
+                                <div id="thumb2Status" style="padding: 5px 15px; background: #E0F2FE; color: #0284C7; border-radius: 20px; font-size: 12px; font-weight: 600;"><i class='bx bx-time'></i> Right Thumb Pending</div>
+                            </div>
                             <button type="button" class="btn btn-primary" id="registerFingerprintBtn" style="background: #0369A1; border: none; padding: 10px 20px;">
-                                <i class='bx bx-fingerprint'></i> Capture Biometrics
+                                <i class='bx bx-fingerprint'></i> Capture Left Thumb
                             </button>
                         </div>
 
@@ -418,11 +422,11 @@
                                 <i class='bx bxs-check-circle'></i>
                             </div>
                             <div class="success-content">
-                                <p style="font-weight: 700; color: #065F46; margin-bottom: 4px;">Biometrics Captured!</p>
-                                <p style="font-size: 13px; color: #059669; margin-bottom: 12px;">Fingerprint ID: <span id="resCapturedFpIdDisplay" style="font-weight: 800;">Pending...</span></p>
+                                <p style="font-weight: 700; color: #065F46; margin-bottom: 4px;">Both Thumbs Captured!</p>
+                                <p style="font-size: 13px; color: #059669; margin-bottom: 12px;">Fingerprint IDs: <span id="resCapturedFpIdDisplay" style="font-weight: 800;">Pending...</span></p>
                             </div>
                             <button type="button" id="resRescanBtn" class="btn-retry" style="background: #EF4444; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;">
-                                <i class='bx bx-refresh'></i> Retry Scan
+                                <i class='bx bx-refresh'></i> Restart Scanning
                             </button>
                         </div>
 

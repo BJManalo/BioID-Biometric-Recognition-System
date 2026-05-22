@@ -862,6 +862,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             const section = document.getElementById('biometricSection');
             const initialState = document.getElementById('resScannerInitialState');
             const verifiedState = document.getElementById('resVerifiedState');
+            const thumb1Status = document.getElementById('thumb1Status');
+            const thumb2Status = document.getElementById('thumb2Status');
+            const instruction = document.getElementById('resScannerInstruction');
+            const registerBtn = document.getElementById('registerFingerprintBtn');
             
             if (section) {
                 section.style.background = '#F0F9FF';
@@ -870,6 +874,25 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (initialState) initialState.style.display = 'block';
             if (verifiedState) verifiedState.style.display = 'none';
             if (resFingerprintId) resFingerprintId.value = '';
+            
+            // Reset Dual Thumb UI
+            if (thumb1Status) {
+                thumb1Status.innerHTML = "<i class='bx bx-time'></i> Left Thumb Pending";
+                thumb1Status.style.background = "#E0F2FE";
+                thumb1Status.style.color = "#0284C7";
+            }
+            if (thumb2Status) {
+                thumb2Status.innerHTML = "<i class='bx bx-time'></i> Right Thumb Pending";
+                thumb2Status.style.background = "#E0F2FE";
+                thumb2Status.style.color = "#0284C7";
+            }
+            if (instruction) {
+                instruction.innerHTML = "<i class='bx bx-info-circle'></i> To register, please place the resident's LEFT THUMB on the scanner.";
+            }
+            if (registerBtn) {
+                registerBtn.innerHTML = "<i class='bx bx-fingerprint'></i> Capture Left Thumb";
+                registerBtn.style.background = "#0369A1";
+            }
             
             logToTerminal("Resident enrollment reset for re-capture", "INFO");
         };
@@ -1049,19 +1072,48 @@ document.addEventListener('DOMContentLoaded', async () => {
                             const verifiedState = document.getElementById('resVerifiedState');
                             const displayFpId = document.getElementById('resCapturedFpIdDisplay');
                             const resFingerprintId = document.getElementById('resFingerprintId');
+                            const thumb1Status = document.getElementById('thumb1Status');
+                            const thumb2Status = document.getElementById('thumb2Status');
+                            const instruction = document.getElementById('resScannerInstruction');
+                            const registerBtn = document.getElementById('registerFingerprintBtn');
 
-                            if (displayFpId) displayFpId.textContent = id;
-                            if (resFingerprintId) resFingerprintId.value = id;
-                            
-                            // Switch UI to success (green theme)
-                            if (section) {
-                                section.style.background = '#F0FDF4'; 
-                                section.style.borderColor = '#4ADE80';
+                            if (!resFingerprintId.value) {
+                                // FIRST THUMB CAPTURED
+                                resFingerprintId.value = id;
+                                if (thumb1Status) {
+                                    thumb1Status.innerHTML = "<i class='bx bxs-check-circle'></i> Left Thumb Captured";
+                                    thumb1Status.style.background = "#D1FAE5";
+                                    thumb1Status.style.color = "#059669";
+                                }
+                                if (instruction) {
+                                    instruction.innerHTML = "<i class='bx bx-info-circle'></i> Please place the resident's RIGHT THUMB on the scanner.";
+                                }
+                                if (registerBtn) {
+                                    registerBtn.innerHTML = "<i class='bx bx-fingerprint'></i> Capture Right Thumb";
+                                    registerBtn.style.background = "#EA580C";
+                                }
+                                showCustomAlert(`Left thumb captured (ID ${id}). Now ready for the right thumb!`, "success", "Step 1 Complete");
+                            } else {
+                                // SECOND THUMB CAPTURED
+                                resFingerprintId.value = resFingerprintId.value + "," + id;
+                                if (displayFpId) displayFpId.textContent = resFingerprintId.value;
+                                
+                                if (thumb2Status) {
+                                    thumb2Status.innerHTML = "<i class='bx bxs-check-circle'></i> Right Thumb Captured";
+                                    thumb2Status.style.background = "#D1FAE5";
+                                    thumb2Status.style.color = "#059669";
+                                }
+
+                                // Switch UI to success
+                                if (section) {
+                                    section.style.background = '#F0FDF4'; 
+                                    section.style.borderColor = '#4ADE80';
+                                }
+                                if (initialState) initialState.style.display = 'none';
+                                if (verifiedState) verifiedState.style.display = 'block';
+                                
+                                showCustomAlert(`Both thumbs captured successfully! IDs: ${resFingerprintId.value}`, "success", "Hardware Ready");
                             }
-                            if (initialState) initialState.style.display = 'none';
-                            if (verifiedState) verifiedState.style.display = 'block';
-                            
-                            showCustomAlert(`FINGERPRINT SAVED! Resident assigned ID ${id}`, "success", "Hardware Ready");
                         }
                     }
                 } else if (line.includes("ENROLL_FAILED") || line.includes("ENROLL_ERROR")) {
@@ -1116,11 +1168,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         try {
             console.log(`Searching for resident with Fingerprint ID: ${hardwareId}`);
             
-            // Search by both string and numeric ID to be safe
+            // Search for the ID considering it might be comma-separated (e.g. "4,5")
+            // Cases: exact match "4", starts with "4,", ends with ",4", or contains ",4,"
             const { data: residents, error } = await supabase
                 .from('residents')
                 .select('*')
-                .or(`fingerprint_id.eq.${hardwareId},fingerprint_id.eq."${hardwareId}"`);
+                .or(`fingerprint_id.eq.${hardwareId},fingerprint_id.ilike.${hardwareId},%,fingerprint_id.ilike.%,${hardwareId},fingerprint_id.ilike.%,${hardwareId},%`);
 
             if (error) throw error;
 
