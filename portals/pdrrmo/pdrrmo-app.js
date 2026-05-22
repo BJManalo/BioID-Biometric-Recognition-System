@@ -550,21 +550,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 usernameInput.value = 'Generating...';
                 
                 try {
-                    const { count, error } = await supabase
+                    const { data, error } = await supabase
                         .from('police_accounts')
-                        .select('*', { count: 'exact', head: true })
+                        .select('id')
                         .eq('municipality', muni);
                         
                     if (error) throw error;
                     
-                    const nextNum = (count || 0) + 1;
+                    const count = data ? data.length : 0;
+                    const nextNum = count + 1;
                     const generatedId = `${strippedMuni}Police${nextNum}`;
                     
                     usernameInput.value = generatedId;
                     tempPasswordInput.value = generatedId;
                 } catch (err) {
                     console.error('Error fetching count:', err);
+                    alert("Error auto-generating ID. Please manually enter a Username.");
                     usernameInput.value = '';
+                    tempPasswordInput.value = '';
                 }
             }
         });
