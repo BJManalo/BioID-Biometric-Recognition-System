@@ -665,7 +665,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const adminId = btn.getAttribute('data-id');
 
         if (btn.classList.contains('btn-delete')) {
-            if (confirm("⚠️ Are you sure you want to delete this Police account?\n\nThis action cannot be undone and will revoke their access to the system.")) {
+            if (confirm("Delete?")) {
 
                 // If it was pulled from DB, delete from DB first
                 if (adminId) {
