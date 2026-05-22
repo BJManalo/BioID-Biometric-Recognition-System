@@ -314,18 +314,20 @@ document.addEventListener('DOMContentLoaded', () => {
     // TOGGLE FORM VISIBILITY
     const toggleFormBtn = document.getElementById('toggleFormBtn');
     const cancelFormBtn = document.getElementById('cancelFormBtn');
-    const accountForm = document.getElementById('accountForm');
+    const accountFormModal = document.getElementById('accountFormModal');
+    const closeAccountModal = document.getElementById('closeAccountModal');
 
     toggleFormBtn.addEventListener('click', () => {
-        accountForm.style.display = accountForm.style.display === 'none' ? 'block' : 'none';
-        if (accountForm.style.display === 'block') {
-            toggleFormBtn.innerHTML = "<i class='bx bx-minus'></i> Close Form";
-            toggleFormBtn.classList.replace('btn-primary', 'btn-secondary');
-        } else {
-            toggleFormBtn.innerHTML = "<i class='bx bx-plus'></i> New Police Account";
-            toggleFormBtn.classList.replace('btn-secondary', 'btn-primary');
+        if (accountFormModal) {
+            accountFormModal.style.display = 'flex';
         }
     });
+    
+    if (closeAccountModal) {
+        closeAccountModal.addEventListener('click', () => {
+            if (accountFormModal) accountFormModal.style.display = 'none';
+        });
+    }
 
     // MOCK ACCOUNT CREATION AND EDITING HANDLING
     const saveAccountBtn = document.getElementById('saveAccountBtn');
@@ -490,9 +492,7 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchAccounts();
 
     cancelFormBtn.addEventListener('click', () => {
-        accountForm.style.display = 'none';
-        toggleFormBtn.innerHTML = "<i class='bx bx-plus'></i> New Police Account";
-        toggleFormBtn.classList.replace('btn-secondary', 'btn-primary');
+        if (accountFormModal) accountFormModal.style.display = 'none';
 
         // Reset edit states and clear inputs
         editingRow = null;
@@ -507,7 +507,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (officerNameInput) officerNameInput.value = '';
         if (usernameInput) usernameInput.value = '';
         if (contactNumberInput) contactNumberInput.value = '';
-        if (municipalitySelect) municipalitySelect.value = '';
+        if (municipalitySelect) {
+            municipalitySelect.value = '';
+            if (municipalitySelect.refreshCustomUI) municipalitySelect.refreshCustomUI();
+        }
         if (tempPasswordInput) tempPasswordInput.value = '';
     });
 
@@ -741,12 +744,12 @@ document.addEventListener('DOMContentLoaded', () => {
             saveAccountBtn.textContent = 'Update Account';
 
             // Show form if it isn't already visible
-            accountForm.style.display = 'block';
-            toggleFormBtn.innerHTML = "<i class='bx bx-minus'></i> Close Form";
-            toggleFormBtn.classList.replace('btn-primary', 'btn-secondary');
+            if (accountFormModal) accountFormModal.style.display = 'flex';
+            if (municipalitySelect && municipalitySelect.refreshCustomUI) {
+                municipalitySelect.refreshCustomUI();
+            }
 
-            // Optional enhancement: Smooth scroll up to the form so the user isn't lost
-            accountForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            // Modals display fixed in center so no scrolling needed.
         }
     });
 

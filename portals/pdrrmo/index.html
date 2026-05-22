@@ -192,73 +192,10 @@
 
             <!-- ACCOUNTS TAB -->
             <div id="accountsTab" class="tab-content" style="display: none;">
-                <!-- Account Creation Form for Admins -->
-                <div class="create-account-section box-glass mt-4">
-                    <div class="title d-flex-between">
-                        <span>Create Police Account</span>
-                        <button class="btn btn-primary" id="toggleFormBtn"><i class='bx bx-plus'></i> New Police Account</button>
-                    </div>
-
-                    <div class="account-form-container" id="accountForm" style="display: none;">
-                        <form class="pdrrmo-account-form">
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label>Authorized Name</label>
-                                    <input type="text" id="officerName" placeholder="e.g. Maria Santos">
-                                </div>
-                                <div class="form-group">
-                                    <label>Assign Municipality</label>
-                                    <select class="modern-select" id="municipalitySelect">
-                                        <option value="" disabled selected>Select Municipality</option>
-                                        <option value="Anini-y">Anini-y</option>
-                                        <option value="Barbaza">Barbaza</option>
-                                        <option value="Belison">Belison</option>
-                                        <option value="Bugasong">Bugasong</option>
-                                        <option value="Caluya">Caluya</option>
-                                        <option value="Culasi">Culasi</option>
-                                        <option value="Hamtic">Hamtic</option>
-                                        <option value="Laua-an">Laua-an</option>
-                                        <option value="Libertad">Libertad</option>
-                                        <option value="Pandan">Pandan</option>
-                                        <option value="Patnongon">Patnongon</option>
-                                        <option value="San Jose de Buenavista">San Jose de Buenavista</option>
-                                        <option value="San Remigio">San Remigio</option>
-                                        <option value="Sebaste">Sebaste</option>
-                                        <option value="Sibalom">Sibalom</option>
-                                        <option value="Tibiao">Tibiao</option>
-                                        <option value="Tobias Fornier">Tobias Fornier</option>
-                                        <option value="Valderrama">Valderrama</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label>Username</label>
-                                    <input type="text" id="usernameInput" placeholder="e.g. maria_santos2024">
-                                </div>
-                                <div class="form-group">
-                                    <label>Contact Number</label>
-                                    <input type="text" id="contactNumberInput" placeholder="e.g. 09123456789">
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group" style="width: 50%;">
-                                    <label>Temporary Password</label>
-                                    <div style="position: relative;">
-                                        <input type="password" value="" id="tempPasswordInput"
-                                            style="width: 100%; padding-right: 40px;" readonly>
-                                        <i class='bx bx-show' id="togglePasswordBtn"
-                                            style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #64748B; font-size: 20px;"></i>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="form-actions">
-                                <button type="button" class="btn btn-secondary" id="cancelFormBtn">Cancel</button>
-                                <button type="button" class="btn btn-warning" id="saveAccountBtn">Create
-                                    Account</button>
-                            </div>
-                        </form>
-                    </div>
+                <!-- Account Creation Button -->
+                <div class="create-account-section box-glass mt-4 d-flex-between align-items-center" style="padding: 20px;">
+                    <span class="title" style="margin: 0; font-size: 1.2rem; font-weight: 600; color: var(--text-color);">Police Accounts</span>
+                    <button class="btn btn-primary" id="toggleFormBtn"><i class='bx bx-plus'></i> New Police Account</button>
                 </div>
 
                 <!-- Unified Accounts Management -->
@@ -525,6 +462,73 @@
 
         </div> <!-- End home-content -->
     </section>
+
+    <!-- CREATE ACCOUNT MODAL -->
+    <div id="accountFormModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content box-glass" style="max-width: 600px;">
+            <div class="modal-header d-flex-between" style="border-bottom: 1px solid #E2E8F0; padding-bottom: 15px; margin-bottom: 20px;">
+                <h3 style="color: #1E293B; margin: 0; font-size: 18px;">Create Police Account</h3>
+                <i class='bx bx-x' id="closeAccountModal" style="font-size: 24px; cursor: pointer; color: #64748B;"></i>
+            </div>
+            <div class="modal-body">
+                <form class="pdrrmo-account-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Officer Name</label>
+                            <input type="text" id="officerName" class="modal-input" placeholder="e.g. Maria Santos">
+                        </div>
+                        <div class="form-group">
+                            <label>Assign Municipality</label>
+                            <select class="modern-select modal-input" id="municipalitySelect">
+                                <option value="" disabled selected>Select Municipality</option>
+                                <option value="Anini-y">Anini-y</option>
+                                <option value="Barbaza">Barbaza</option>
+                                <option value="Belison">Belison</option>
+                                <option value="Bugasong">Bugasong</option>
+                                <option value="Caluya">Caluya</option>
+                                <option value="Culasi">Culasi</option>
+                                <option value="Hamtic">Hamtic</option>
+                                <option value="Laua-an">Laua-an</option>
+                                <option value="Libertad">Libertad</option>
+                                <option value="Pandan">Pandan</option>
+                                <option value="Patnongon">Patnongon</option>
+                                <option value="San Jose de Buenavista">San Jose de Buenavista</option>
+                                <option value="San Remigio">San Remigio</option>
+                                <option value="Sebaste">Sebaste</option>
+                                <option value="Sibalom">Sibalom</option>
+                                <option value="Tibiao">Tibiao</option>
+                                <option value="Tobias Fornier">Tobias Fornier</option>
+                                <option value="Valderrama">Valderrama</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Username</label>
+                            <input type="text" id="usernameInput" class="modal-input" placeholder="e.g. maria_santos2024">
+                        </div>
+                        <div class="form-group">
+                            <label>Contact Number</label>
+                            <input type="text" id="contactNumberInput" class="modal-input" placeholder="e.g. 09123456789">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group" style="width: 50%;">
+                            <label>Temporary Password</label>
+                            <div style="position: relative;">
+                                <input type="password" value="" id="tempPasswordInput" class="modal-input" style="width: 100%; padding-right: 40px;" readonly>
+                                <i class='bx bx-show' id="togglePasswordBtn" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #64748B; font-size: 20px;"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-actions" style="margin-top: 25px; display: flex; justify-content: flex-end; gap: 10px;">
+                        <button type="button" class="btn btn-secondary" id="cancelFormBtn">Cancel</button>
+                        <button type="button" class="btn btn-warning" id="saveAccountBtn">Create Account</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 
     <!-- CUSTOM ALERT MODAL -->
     <div id="customAlertModal" class="modal-overlay" style="display: none; z-index: 10000;">
