@@ -329,7 +329,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // MOCK ACCOUNT CREATION AND EDITING HANDLING
     const saveAccountBtn = document.getElementById('saveAccountBtn');
-    const mdrrmoTableBody = document.getElementById('mdrrmoTableBody');
     let editingRow = null;
 
     // --- UNIFIED ACCOUNTS LOGIC ---
@@ -513,9 +512,9 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateAdminCount() {
         const countDisplay = document.getElementById('adminCount');
         const emptyRow = document.getElementById('emptyAdminRow');
-        if (!countDisplay || !mdrrmoTableBody) return;
+        if (!countDisplay || !accountsTableBody) return;
 
-        let activeRows = mdrrmoTableBody.querySelectorAll('tr:not(#emptyAdminRow)').length;
+        let activeRows = accountsTableBody.querySelectorAll('tr:not(#emptyAdminRow)').length;
         countDisplay.textContent = activeRows;
 
         if (emptyRow) {
@@ -644,7 +643,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Handle Edit and Delete directly from the table rows
-    mdrrmoTableBody.addEventListener('click', async (e) => {
+    accountsTableBody.addEventListener('click', async (e) => {
         const btn = e.target.closest('button');
         if (!btn) return;
 
