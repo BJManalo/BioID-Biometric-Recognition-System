@@ -382,7 +382,29 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
 
+            // Fetch from residents
+            if (role === 'all' || role === 'resident') {
+                let query = supabase.from('residents').select('*');
+                
+                if (filterMuni) {
+                    query = query.eq('municipality', filterMuni);
+                }
 
+                const { data, error } = await query;
+                if (error) throw error;
+                
+                if (data) {
+                    accounts = accounts.concat(data.map(r => ({
+                        id: r.id,
+                        name: `${r.first_name} ${r.last_name}`,
+                        username: r.username,
+                        role: 'RESIDENT',
+                        municipality: r.municipality,
+                        contact: r.contact_number,
+                        status: 'Active'
+                    })));
+                }
+            }
 
             // Apply Search Filter locally
             if (searchQuery) {

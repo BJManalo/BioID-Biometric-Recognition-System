@@ -30,7 +30,12 @@
                     <span class="links_name">Dashboard</span>
                 </a>
             </li>
-
+            <li>
+                <a href="#" class="nav-btn" data-tab="residents">
+                    <i class='bx bx-group'></i>
+                    <span class="links_name">Residents</span>
+                </a>
+            </li>
             <li>
                 <a href="#" class="nav-btn" data-tab="reports">
                     <i class='bx bx-printer'></i>
@@ -296,7 +301,7 @@
                     <div class="role-tabs" style="display: flex; gap: 10px; margin-top: 15px; border-bottom: 1px solid #E2E8F0; padding-bottom: 10px; overflow-x: auto; -webkit-overflow-scrolling: touch;">
                         <button class="account-tab-btn active" data-role="all" style="padding: 8px 16px; border-radius: 20px; border: none; background: #10B981; color: #fff; font-weight: 600; cursor: pointer; flex-shrink: 0;">All Accounts</button>
                         <button class="account-tab-btn" data-role="police" style="padding: 8px 16px; border-radius: 20px; border: none; background: #F1F5F9; color: #64748B; font-weight: 600; cursor: pointer; flex-shrink: 0;">Police</button>
-
+                        <button class="account-tab-btn" data-role="resident" style="padding: 8px 16px; border-radius: 20px; border: none; background: #F1F5F9; color: #64748B; font-weight: 600; cursor: pointer; flex-shrink: 0;">Residents</button>
                     </div>
 
                     <div class="table-responsive mt-3">
@@ -325,7 +330,62 @@
                 </div>
             </div> <!-- End Accounts Tab -->
 
+            <!-- RESIDENTS TAB -->
+            <div id="residentsTab" class="tab-content" style="display: none;">
+                <div class="recent-reports box-glass mt-4">
+                    <div class="title d-flex-between">
+                        <span>Registered Provincial Residents</span>
+                        <div class="filter-actions" style="display: flex; gap: 10px;">
+                            <select class="modern-select" style="width: auto;">
+                                <option value="">All Municipalities</option>
+                                <option value="Anini-y">Anini-y</option>
+                                <option value="Barbaza">Barbaza</option>
+                                <option value="Belison">Belison</option>
+                                <option value="Bugasong">Bugasong</option>
+                                <option value="Caluya">Caluya</option>
+                                <option value="Culasi">Culasi</option>
+                                <option value="Hamtic">Hamtic</option>
+                                <option value="Laua-an">Laua-an</option>
+                                <option value="Libertad">Libertad</option>
+                                <option value="Pandan">Pandan</option>
+                                <option value="Patnongon">Patnongon</option>
+                                <option value="San Jose">San Jose de Buenavista</option>
+                                <option value="San Remigio">San Remigio</option>
+                                <option value="Sebaste">Sebaste</option>
+                                <option value="Sibalom">Sibalom</option>
+                                <option value="Tibiao">Tibiao</option>
+                                <option value="Tobias Fornier">Tobias Fornier</option>
+                                <option value="Valderrama">Valderrama</option>
+                            </select>
+                        </div>
+                    </div>
 
+                    <div class="table-responsive mt-3">
+                        <table class="reports-table">
+                            <thead>
+                                <tr>
+                                    <th>Full Name</th>
+                                    <th>Municipality</th>
+                                    <th>Barangay</th>
+                                    <th>Contact Info</th>
+                                    <th>Registration Date</th>
+                                    <th>Verification Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="residentsTableBody">
+                                <!-- Records pulled via Database -->
+                                <tr>
+                                    <td colspan="6" style="text-align: center; padding: 30px; color: #64748B;">
+                                        <i class='bx bx-fingerprint'
+                                            style="font-size: 24px; display: block; margin-bottom: 10px;"></i>
+                                        No residents currently synchronized with the provincial database.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div> <!-- End Residents Tab -->
 
             <!-- REPORTS TAB -->
             <div id="reportsTab" class="tab-content" style="display: none;">
