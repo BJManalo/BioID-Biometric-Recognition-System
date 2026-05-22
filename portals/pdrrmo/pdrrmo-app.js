@@ -554,10 +554,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 usernameInput.value = 'Generating...';
                 
                 try {
-                    const count = window.allPoliceAccounts ? window.allPoliceAccounts.filter(a => a.municipality === muni).length : 0;
+                    let count = window.allPoliceAccounts ? window.allPoliceAccounts.filter(a => a.municipality === muni).length : 0;
                     
-                    const nextNum = count + 1;
-                    const generatedId = `${strippedMuni}Police${nextNum}`;
+                    let nextNum = count + 1;
+                    let generatedId = `${strippedMuni}Police${nextNum}`;
+                    
+                    // Guarantee uniqueness by checking all existing usernames
+                    while (window.allPoliceAccounts && window.allPoliceAccounts.some(a => a.username.toLowerCase() === generatedId.toLowerCase())) {
+                        nextNum++;
+                        generatedId = `${strippedMuni}Police${nextNum}`;
+                    }
                     
                     usernameInput.value = generatedId;
                     tempPasswordInput.value = generatedId;
