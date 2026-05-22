@@ -650,7 +650,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (error) throw error;
 
                 // Sync UI fully with Database
-                accountForm.reset();
+                const formEl = document.querySelector('.pdrrmo-account-form');
+                if (formEl) formEl.reset();
                 alert(`The Police officer for ${municipality} can now log in securely.`);
                 fetchAccounts();
             } catch (error) {
@@ -670,11 +671,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (tempPasswordDisplay) tempPasswordDisplay.textContent = 'AntiquePolice2026!';
         if (municipalitySelectElement) {
             municipalitySelectElement.value = '';
+            if (municipalitySelectElement.refreshCustomUI) municipalitySelectElement.refreshCustomUI();
         }
 
-        accountForm.style.display = 'none';
-        toggleFormBtn.innerHTML = "<i class='bx bx-plus'></i> New Police Account";
-        toggleFormBtn.classList.replace('btn-primary', 'btn-secondary');
+        const accountFormModal = document.getElementById('accountFormModal');
+        if (accountFormModal) accountFormModal.style.display = 'none';
 
         saveAccountBtn.textContent = 'Create Account';
         saveAccountBtn.disabled = false;
