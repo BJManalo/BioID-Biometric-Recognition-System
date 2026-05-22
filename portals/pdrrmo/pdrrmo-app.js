@@ -322,7 +322,7 @@ document.addEventListener('DOMContentLoaded', () => {
             toggleFormBtn.innerHTML = "<i class='bx bx-minus'></i> Close Form";
             toggleFormBtn.classList.replace('btn-primary', 'btn-secondary');
         } else {
-            toggleFormBtn.innerHTML = "<i class='bx bx-plus'></i> New MDRRMO Account";
+            toggleFormBtn.innerHTML = "<i class='bx bx-plus'></i> New Police Account";
             toggleFormBtn.classList.replace('btn-secondary', 'btn-primary');
         }
     });
@@ -429,10 +429,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 accountsTableBody.appendChild(row);
             });
 
-            // Update Dashboard Count for MDRRMO
-            const mdrrmoCount = accounts.filter(a => a.role === 'MDRRMO').length;
+            // Update Dashboard Count for Police
+            const policeCount = accounts.filter(a => a.role === 'POLICE').length;
             const countDisplay = document.getElementById('adminCount');
-            if (countDisplay) countDisplay.textContent = mdrrmoCount;
+            if (countDisplay) countDisplay.textContent = policeCount;
 
         } catch (err) {
             console.error('Error fetching accounts:', err);
@@ -488,7 +488,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     cancelFormBtn.addEventListener('click', () => {
         accountForm.style.display = 'none';
-        toggleFormBtn.innerHTML = "<i class='bx bx-plus'></i> New MDRRMO Account";
+        toggleFormBtn.innerHTML = "<i class='bx bx-plus'></i> New Police Account";
         toggleFormBtn.classList.replace('btn-secondary', 'btn-primary');
 
         // Reset edit states and clear inputs
@@ -612,9 +612,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (error) throw error;
 
                 // Sync UI fully with Database
-                await fetchAccounts();
-
-                alert(`The MDRRMO admin for ${municipality} can now log in securely.`);
+                accountForm.reset();
+                alert(`The Police officer for ${municipality} can now log in securely.`);
+                fetchAccounts();
             } catch (error) {
                 console.error('Account Creation Error:', error);
                 alert('❌ ' + error.message);
@@ -629,13 +629,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (usernameInput) usernameInput.value = '';
         if (contactNumberInput) contactNumberInput.value = '';
         if (tempPasswordInput) tempPasswordInput.value = 'AntiquePolice2026!';
+        if (tempPasswordDisplay) tempPasswordDisplay.textContent = 'AntiquePolice2026!';
         if (municipalitySelectElement) {
             municipalitySelectElement.value = '';
         }
 
         accountForm.style.display = 'none';
         toggleFormBtn.innerHTML = "<i class='bx bx-plus'></i> New Police Account";
-        toggleFormBtn.classList.replace('btn-secondary', 'btn-primary');
+        toggleFormBtn.classList.replace('btn-primary', 'btn-secondary');
 
         saveAccountBtn.textContent = 'Create Account';
         saveAccountBtn.disabled = false;
