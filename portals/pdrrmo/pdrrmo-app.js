@@ -381,7 +381,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
 
-
+            // Expose globally for auto-fill logic to be instant
+            window.allPoliceAccounts = accounts;
 
             // Apply Search Filter locally
             if (searchQuery) {
@@ -550,22 +551,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 usernameInput.value = 'Generating...';
                 
                 try {
-                    const { data, error } = await supabase
-                        .from('police_accounts')
-                        .select('id')
-                        .eq('municipality', muni);
-                        
-                    if (error) throw error;
+                    const count = window.allPoliceAccounts ? window.allPoliceAccounts.filter(a => a.municipality === muni).length : 0;
                     
-                    const count = data ? data.length : 0;
                     const nextNum = count + 1;
                     const generatedId = `${strippedMuni}Police${nextNum}`;
                     
                     usernameInput.value = generatedId;
                     tempPasswordInput.value = generatedId;
                 } catch (err) {
-                    console.error('Error fetching count:', err);
-                    alert("Error auto-generating ID. Please manually enter a Username.");
+                    console.error('Error in auto-generating ID:', err);
                     usernameInput.value = '';
                     tempPasswordInput.value = '';
                 }
