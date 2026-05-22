@@ -507,7 +507,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (usernameInput) usernameInput.value = '';
         if (contactNumberInput) contactNumberInput.value = '';
         if (municipalitySelect) municipalitySelect.value = '';
-        if (tempPasswordInput) tempPasswordInput.value = 'AntiqueMDRRMO2026!';
+        if (tempPasswordInput) tempPasswordInput.value = '';
     });
 
     // Helper: Dynamic Dashboard Counter
@@ -534,11 +534,40 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // Role Selection Logic
-    const roleSelect = document.getElementById('roleSelect');
+    // Auto-fill Username and Password based on Municipality
     const municipalitySelect = document.getElementById('municipalitySelect');
-
-    // Role Selection Logic removed (only Police now)
+    if (municipalitySelect) {
+        municipalitySelect.addEventListener('change', async (e) => {
+            const muni = e.target.value;
+            if (!muni) return;
+            
+            const strippedMuni = muni.replace(/\s+/g, '');
+            const usernameInput = document.getElementById('usernameInput');
+            const tempPasswordInput = document.getElementById('tempPasswordInput');
+            
+            if (usernameInput && tempPasswordInput) {
+                usernameInput.value = 'Generating...';
+                
+                try {
+                    const { count, error } = await supabase
+                        .from('police_accounts')
+                        .select('*', { count: 'exact', head: true })
+                        .eq('municipality', muni);
+                        
+                    if (error) throw error;
+                    
+                    const nextNum = (count || 0) + 1;
+                    const generatedId = `${strippedMuni}Police${nextNum}`;
+                    
+                    usernameInput.value = generatedId;
+                    tempPasswordInput.value = generatedId;
+                } catch (err) {
+                    console.error('Error fetching count:', err);
+                    usernameInput.value = '';
+                }
+            }
+        });
+    }
 
     saveAccountBtn.addEventListener('click', async () => {
         const officerNameInput = document.getElementById('officerName');
