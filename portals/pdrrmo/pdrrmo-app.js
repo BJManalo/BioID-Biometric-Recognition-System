@@ -431,7 +431,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td>${account.municipality || 'N/A'}</td>
                     <td>${account.contact || 'N/A'}</td>
                     <td>
-                        <button class="btn-icon btn-view" data-id="${account.id}"><i class='bx bx-show'></i></button>
+                        <div style="display: flex; gap: 8px;">
+                            ${account.role === 'POLICE' ? `
+                                <button class="btn-icon btn-edit" data-id="${account.id}" data-username="${account.username}"><i class='bx bx-edit'></i></button>
+                                <button class="btn-icon btn-delete" data-id="${account.id}"><i class='bx bx-trash'></i></button>
+                            ` : `
+                                <button class="btn-icon btn-view" data-id="${account.id}"><i class='bx bx-show'></i></button>
+                            `}
+                        </div>
                     </td>
                 `;
                 accountsTableBody.appendChild(row);
