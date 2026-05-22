@@ -667,8 +667,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (officerNameInput) officerNameInput.value = '';
         if (usernameInput) usernameInput.value = '';
         if (contactNumberInput) contactNumberInput.value = '';
-        if (tempPasswordInput) tempPasswordInput.value = 'AntiquePolice2026!';
-        if (tempPasswordDisplay) tempPasswordDisplay.textContent = 'AntiquePolice2026!';
+        if (tempPasswordInput) tempPasswordInput.value = '';
         if (municipalitySelectElement) {
             municipalitySelectElement.value = '';
             if (municipalitySelectElement.refreshCustomUI) municipalitySelectElement.refreshCustomUI();
