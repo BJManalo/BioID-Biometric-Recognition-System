@@ -58,7 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 let userData = null;
                 let userRole = null;
 
-                // 1. Check system_users (Admin / PDRRMO / MDRRMO)
+                // 1. Check system_users (Admin / PDRRMO)
                 const { data: adminUser, error: adminErr } = await supabase
                     .from('system_users')
                     .select('*')
@@ -66,9 +66,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     .eq('temp_password', password)
                     .maybeSingle();
 
-                if (adminUser) {
+                if (adminUser && adminUser.role === 'PDRRMO') {
                     userData = adminUser;
-                    userRole = adminUser.role;
+                    userRole = 'PDRRMO';
                 } else {
                     // 2. Check police_accounts
                     const { data: policeUser, error: policeErr } = await supabase
@@ -81,19 +81,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (policeUser) {
                         userData = policeUser;
                         userRole = 'POLICE';
-                    } else {
-                        // 3. Check residents
-                        const { data: residentUser, error: resErr } = await supabase
-                            .from('residents')
-                            .select('*')
-                            .ilike('username', username)
-                            .eq('password', password)
-                            .maybeSingle();
-
-                        if (residentUser) {
-                            userData = residentUser;
-                            userRole = 'RESIDENT';
-                        }
                     }
                 }
 
@@ -103,12 +90,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     
                     if (userRole === 'PDRRMO') {
                         window.location.href = 'portals/pdrrmo/index.html';
-                    } else if (userRole === 'MDRRMO') {
-                        window.location.href = 'portals/mdrrmo/index.html';
                     } else if (userRole === 'POLICE') {
                         window.location.href = 'portals/police/index.html';
-                    } else if (userRole === 'RESIDENT') {
-                        window.location.href = 'portals/resident/index.html';
                     }
                     return;
                 }

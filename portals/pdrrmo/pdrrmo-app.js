@@ -358,16 +358,12 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             let accounts = [];
 
-            // Fetch from system_users (MDRRMO, Police, PDRRMO)
-            if (role === 'all' || role === 'mdrrmo' || role === 'police') {
-                let query = supabase.from('system_users').select('*');
-                
-                if (role !== 'all') {
-                    query = query.eq('role', role.toUpperCase());
-                }
+            // Fetch from police_accounts
+            if (role === 'all' || role === 'police') {
+                let query = supabase.from('police_accounts').select('*');
                 
                 if (filterMuni) {
-                    query = query.eq('assigned_municipality', filterMuni);
+                    query = query.eq('municipality', filterMuni);
                 }
 
                 const { data, error } = await query;
@@ -378,10 +374,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         id: u.id,
                         name: `${u.first_name} ${u.last_name}`,
                         username: u.username,
-                        role: u.role,
-                        municipality: u.assigned_municipality,
+                        role: 'POLICE',
+                        municipality: u.municipality,
                         contact: u.contact_number,
-                        status: u.status
+                        status: u.status || 'Active'
                     })));
                 }
             }
@@ -563,39 +559,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const roleSelect = document.getElementById('roleSelect');
     const municipalitySelect = document.getElementById('municipalitySelect');
 
-    if (roleSelect && municipalitySelect) {
-        roleSelect.addEventListener('change', (e) => {
-            if (e.target.value === 'PDRRMO') {
-                municipalitySelect.innerHTML = '<option value="Antique" selected>Antique (Province-Wide)</option>';
-                municipalitySelect.disabled = true;
-                municipalitySelect.style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
-            } else {
-                municipalitySelect.innerHTML = `
-                    <option value="" disabled selected>Select Municipality</option>
-                    <option value="Anini-y">Anini-y</option>
-                    <option value="Barbaza">Barbaza</option>
-                    <option value="Belison">Belison</option>
-                    <option value="Bugasong">Bugasong</option>
-                    <option value="Caluya">Caluya</option>
-                    <option value="Culasi">Culasi</option>
-                    <option value="Hamtic">Hamtic</option>
-                    <option value="Laua-an">Laua-an</option>
-                    <option value="Libertad">Libertad</option>
-                    <option value="Pandan">Pandan</option>
-                    <option value="Patnongon">Patnongon</option>
-                    <option value="San Jose de Buenavista">San Jose de Buenavista</option>
-                    <option value="San Remigio">San Remigio</option>
-                    <option value="Sebaste">Sebaste</option>
-                    <option value="Sibalom">Sibalom</option>
-                    <option value="Tibiao">Tibiao</option>
-                    <option value="Tobias Fornier">Tobias Fornier</option>
-                    <option value="Valderrama">Valderrama</option>
-                `;
-                municipalitySelect.disabled = false;
-                municipalitySelect.style.backgroundColor = 'transparent';
-            }
-        });
-    }
+    // Role Selection Logic removed (only Police now)
 
     saveAccountBtn.addEventListener('click', async () => {
         const officerNameInput = document.getElementById('officerName');
@@ -608,11 +572,9 @@ document.addEventListener('DOMContentLoaded', () => {
         let deptHead = officerNameInput ? officerNameInput.value.trim() : '';
         let username = usernameInput ? usernameInput.value.trim() : '';
         let municipality = municipalitySelectElement ? municipalitySelectElement.value : '';
-        let role = roleSelectElement ? roleSelectElement.value : 'MDRRMO';
+        let role = 'POLICE'; // Hardcoded to POLICE now
         let contact = contactNumberInput ? contactNumberInput.value.trim() : '';
-        let tempPassword = tempPasswordInput ? tempPasswordInput.value : 'AntiqueMDRRMO2026!';
-
-        if (role === 'PDRRMO') municipality = 'Antique';
+        let tempPassword = tempPasswordInput ? tempPasswordInput.value : 'AntiquePolice2026!';
 
         if (!deptHead || !username || !municipality || !contact) {
             alert("⚠️ Please fill in all details including a unique username.");
@@ -633,7 +595,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const adminId = editingRow.querySelector('.btn-edit').getAttribute('data-id');
             try {
                 const { data, error } = await supabase
-                    .from('system_users')
+                    .from('police_accounts')
                     .update({
                         username: username,
                         first_name: firstName,
@@ -645,7 +607,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (error) throw error;
 
-                await fetchAdmins();
+                await fetchAccounts();
                 alert(`✅ Account updated successfully.`);
             } catch (err) {
                 console.error("Update error", err);
@@ -658,15 +620,14 @@ document.addEventListener('DOMContentLoaded', () => {
             // DATABASE INSERT - Use Local API
             try {
                 const { data, error } = await supabase
-                    .from('system_users')
+                    .from('police_accounts')
                     .insert([{
                         username: username,
-                        role: role,
                         first_name: firstName,
                         last_name: lastName,
-                        assigned_municipality: municipality,
+                        municipality: municipality,
                         contact_number: contact,
-                        temp_password: tempPassword,
+                        temporary_password: tempPassword,
                         status: 'Active'
                     }])
                     .select();
@@ -674,7 +635,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (error) throw error;
 
                 // Sync UI fully with Database
-                await fetchAdmins();
+                await fetchAccounts();
 
                 alert(`The MDRRMO admin for ${municipality} can now log in securely.`);
             } catch (error) {
@@ -690,13 +651,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (officerNameInput) officerNameInput.value = '';
         if (usernameInput) usernameInput.value = '';
         if (contactNumberInput) contactNumberInput.value = '';
-        if (tempPasswordInput) tempPasswordInput.value = 'AntiqueMDRRMO2026!';
-        if (roleSelect && roleSelect.value === 'MDRRMO' && municipalitySelect) {
-            municipalitySelect.value = '';
+        if (tempPasswordInput) tempPasswordInput.value = 'AntiquePolice2026!';
+        if (municipalitySelectElement) {
+            municipalitySelectElement.value = '';
         }
 
         accountForm.style.display = 'none';
-        toggleFormBtn.innerHTML = "<i class='bx bx-plus'></i> New MDRRMO Account";
+        toggleFormBtn.innerHTML = "<i class='bx bx-plus'></i> New Police Account";
         toggleFormBtn.classList.replace('btn-secondary', 'btn-primary');
 
         saveAccountBtn.textContent = 'Create Account';
@@ -713,7 +674,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const adminId = btn.getAttribute('data-id');
 
         if (btn.classList.contains('btn-delete')) {
-            if (confirm("⚠️ Are you sure you want to delete this MDRRMO account?\n\nThis action cannot be undone and will revoke their access to the system.")) {
+            if (confirm("⚠️ Are you sure you want to delete this Police account?\n\nThis action cannot be undone and will revoke their access to the system.")) {
 
                 // If it was pulled from DB, delete from DB first
                 if (adminId) {
@@ -722,7 +683,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     try {
                         const { error } = await supabase
-                            .from('system_users')
+                            .from('police_accounts')
                             .delete()
                             .eq('id', adminId);
 
