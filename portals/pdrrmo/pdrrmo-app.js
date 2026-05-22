@@ -364,7 +364,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 let query = supabase.from('police_accounts').select('*');
                 
                 if (filterMuni) {
-                    query = query.eq('municipality', filterMuni);
+                    query = query.eq('jurisdiction', filterMuni);
                 }
 
                 const { data, error } = await query;
@@ -376,7 +376,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         name: `${u.first_name} ${u.last_name}`,
                         username: u.username,
                         role: 'POLICE',
-                        municipality: u.municipality,
+                        municipality: u.jurisdiction,
                         contact: u.contact_number,
                         status: u.status || 'Active'
                     })));
@@ -609,6 +609,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         username: username,
                         first_name: firstName,
                         last_name: lastName,
+                        jurisdiction: municipality,
                         contact_number: contact
                     })
                     .eq('id', adminId)
@@ -634,7 +635,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         username: username,
                         first_name: firstName,
                         last_name: lastName,
-                        municipality: municipality,
+                        jurisdiction: municipality,
                         contact_number: contact,
                         temporary_password: tempPassword,
                         status: 'Active'
