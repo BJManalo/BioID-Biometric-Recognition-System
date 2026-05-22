@@ -1133,6 +1133,21 @@ document.addEventListener('DOMContentLoaded', async () => {
             const person = residents[0];
             logToTerminal(`VICTIM IDENTIFIED: ${person.first_name} ${person.last_name}`, "SUCCESS");
 
+            // SEND NAME AND EMERGENCY CONTACT TO ARDUINO LCD
+            if (scannerActive && serialPort && serialPort.writable) {
+                try {
+                    const writer = serialPort.writable.getWriter();
+                    let shortName = (`${person.first_name} ${person.last_name}`).substring(0, 16);
+                    let shortContact = (person.emergency_phone || 'None').substring(0, 16);
+                    const data = new TextEncoder().encode(`DISPLAY_VICTIM:${shortName}|${shortContact}\n`);
+                    await writer.write(data);
+                    writer.releaseLock();
+                    logToTerminal(`LCD Updated with Victim Info`, "INFO");
+                } catch (hwErr) {
+                    console.error("Hardware display command failed", hwErr);
+                }
+            }
+
             // Ensure the Report Modal is open
             if (!reportModal.classList.contains('show')) {
                 openReportModal();
