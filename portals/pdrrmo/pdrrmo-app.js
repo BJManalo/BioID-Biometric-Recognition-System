@@ -637,8 +637,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         last_name: lastName,
                         jurisdiction: municipality,
                         contact_number: contact,
-                        temporary_password: tempPassword,
-                        status: 'Active'
+                        temporary_password: tempPassword
                     }])
                     .select();
 
