@@ -539,6 +539,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (municipalitySelect) {
         municipalitySelect.addEventListener('change', async (e) => {
             const muni = e.target.value;
+            console.log("Municipality selected:", muni);
             if (!muni) return;
             
             const strippedMuni = muni.replace(/\s+/g, '');
