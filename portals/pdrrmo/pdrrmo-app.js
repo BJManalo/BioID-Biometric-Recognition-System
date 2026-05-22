@@ -392,6 +392,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 );
             }
 
+            // Update Dashboard Count for Police
+            const policeCount = accounts.filter(a => a.role === 'POLICE').length;
+            const countDisplay = document.getElementById('adminCount');
+            if (countDisplay) countDisplay.textContent = policeCount;
+
             // Render Rows
             accountsTableBody.innerHTML = '';
             
@@ -429,10 +434,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 accountsTableBody.appendChild(row);
             });
 
-            // Update Dashboard Count for Police
-            const policeCount = accounts.filter(a => a.role === 'POLICE').length;
-            const countDisplay = document.getElementById('adminCount');
-            if (countDisplay) countDisplay.textContent = policeCount;
+
 
         } catch (err) {
             console.error('Error fetching accounts:', err);
