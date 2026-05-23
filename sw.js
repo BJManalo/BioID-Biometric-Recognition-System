@@ -1,4 +1,4 @@
-const CACHE_NAME = 'bioid-cache-v4';
+const CACHE_NAME = 'bioid-cache-v5';
 const urlsToCache = [
   'index.html',
   'assets/css/style.css',
@@ -29,6 +29,13 @@ self.addEventListener('activate', event => {
 });
 
 self.addEventListener('fetch', event => {
+  // Bypass service worker for API calls and external services
+  if (event.request.url.includes('supabase.co') || 
+      event.request.url.includes('/api/') || 
+      event.request.url.includes('nominatim')) {
+    return; // Let the browser handle these directly
+  }
+
   // Network-first strategy for logic scripts to ensure they are always up to date
   if (event.request.url.includes('.js')) {
     event.respondWith(
