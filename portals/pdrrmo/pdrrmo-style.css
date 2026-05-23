@@ -402,6 +402,30 @@ body {
     }
 }
 
+/* Mobile Wrapper Fix */
+@media (max-width: 1024px) {
+    .home-section {
+        width: calc(100% - 80px);
+        left: 80px;
+    }
+}
+
+@media (max-width: 768px) {
+    .home-section {
+        width: 100% !important;
+        left: 0 !important;
+    }
+    .sidebar {
+        left: -100% !important;
+        width: 260px !important;
+        position: fixed !important;
+        z-index: 1000 !important;
+    }
+    .sidebar.active {
+        left: 0 !important;
+    }
+}
+
 .custom-dropdown-options {
     position: absolute;
     top: calc(100% + 5px);
