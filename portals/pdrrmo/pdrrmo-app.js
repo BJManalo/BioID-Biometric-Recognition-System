@@ -237,6 +237,19 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // CLOSE SIDEBAR ON MOBILE WHEN CLICKING OUTSIDE
+    document.addEventListener("click", function(event) {
+        if (window.innerWidth <= 768 && sidebar && sidebar.classList.contains("active")) {
+            const isClickInsideSidebar = sidebar.contains(event.target);
+            const isClickOnSidebarBtn = sidebarBtn && sidebarBtn.contains(event.target);
+
+            if (!isClickInsideSidebar && !isClickOnSidebarBtn) {
+                sidebar.classList.remove("active");
+                if (sidebarBtn) sidebarBtn.classList.replace("bx-menu-alt-right", "bx-menu");
+            }
+        }
+    });
+
     // TAB SWITCHING LOGIC
     const navBtns = document.querySelectorAll('.nav-btn');
     const tabContents = document.querySelectorAll('.tab-content');
