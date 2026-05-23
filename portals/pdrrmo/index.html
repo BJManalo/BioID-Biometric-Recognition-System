@@ -73,12 +73,19 @@
     </div>
 
     <section class="home-section">
-        <nav class="pdrrmo-nav">
+        <nav class="pdrrmo-nav" style="display: flex; justify-content: space-between; align-items: center; padding-right: 25px;">
             <div class="sidebar-button" style="display: flex; align-items: center; gap: 15px;">
                 <i class='bx bx-menu sidebarBtn' style="font-size: 28px; cursor: pointer;"></i>
                 <span class="dashboard" id="current-tab-title">Dashboard</span>
             </div>
 
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <!-- Profile Indicator -->
+                <div class="profile-details" style="display: flex; align-items: center; background: #F1F5F9; padding: 0 15px; height: 40px; border-radius: 20px; border: 1px solid #E2E8F0; width: auto; overflow: visible; white-space: nowrap;">
+                    <i class='bx bxs-user-circle' style="font-size: 24px; color: #103155;"></i>
+                    <span id="profileName" class="admin_name" style="font-size: 14px; font-weight: 600; color: #1E293B; margin-left: 8px;">PDRRMO Admin</span>
+                </div>
+            </div>
         </nav>
 
         <div class="home-content">

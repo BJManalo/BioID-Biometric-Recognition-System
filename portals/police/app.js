@@ -514,8 +514,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <td>${r.severity}</td>
                 <td>${r.status}</td>
                 <td>
-                    <button class="btn-action btn-edit" title="Edit"><i class='bx bx-edit-alt'></i></button>
-                    ${isFull ? `<button class="btn-action btn-delete" title="Delete"><i class='bx bx-trash'></i></button>` : ''}
+                    <div style="display: flex; gap: 8px; flex-wrap: nowrap; align-items: center; justify-content: center;">
+                        <button class="btn-action btn-edit" title="Edit"><i class='bx bx-edit-alt'></i></button>
+                        ${isFull ? `<button class="btn-action btn-delete" title="Delete"><i class='bx bx-trash'></i></button>` : ''}
+                    </div>
                 </td>
             `;
 
@@ -623,19 +625,24 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         if (!coords) {
             try {
-                const query = `Barangay ${report.location}, ${report.municipality}, Antique, Philippines`;
-                const response = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1`);
+                // Primary search using Esri ArcGIS (Very accurate for the Philippines)
+                const query = `${report.location}, ${report.municipality}, Antique, Philippines`;
+                const url = `https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/findAddressCandidates?f=json&singleLine=${encodeURIComponent(query)}&maxLocations=1`;
+                const response = await fetch(url);
                 const data = await response.json();
 
-                if (data && data.length > 0) {
-                    coords = [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+                if (data && data.candidates && data.candidates.length > 0) {
+                    coords = [parseFloat(data.candidates[0].location.y), parseFloat(data.candidates[0].location.x)];
                     geocodeCache[key] = coords;
                 } else {
+                    // Fallback to municipality center if specific barangay fails
                     const fbQuery = `${report.municipality}, Antique, Philippines`;
-                    const fbRes = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(fbQuery)}&format=json&limit=1`);
-                    const fbData = await fbRes.json();
-                    if (fbData && fbData.length > 0) {
-                        coords = [parseFloat(fbData[0].lat), parseFloat(fbData[0].lon)];
+                    const fbUrl = `https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/findAddressCandidates?f=json&singleLine=${encodeURIComponent(fbQuery)}&maxLocations=1`;
+                    const fbResp = await fetch(fbUrl);
+                    const fbData = await fbResp.json();
+                    
+                    if (fbData && fbData.candidates && fbData.candidates.length > 0) {
+                        coords = [parseFloat(fbData.candidates[0].location.y), parseFloat(fbData.candidates[0].location.x)];
                         console.log(`Fallback geocoding for ${report.location} to ${report.municipality} center.`);
                     }
                 }

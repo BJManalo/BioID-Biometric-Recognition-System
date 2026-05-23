@@ -1154,35 +1154,42 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (coordinateCache[cacheKey]) {
                 addMarker(coordinateCache[cacheKey], r);
-                continue;
-            }
+            } else {
+                try {
+                    const url = `https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/findAddressCandidates?f=json&singleLine=${encodeURIComponent(query)}&maxLocations=1`;
+                    const response = await fetch(url);
+                    const data = await response.json();
 
-            try {
-                // Throttle requests slightly if there are many reports
-                await new Promise(resolve => setTimeout(resolve, 100));
-
-                const response = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1`);
-                const data = await response.json();
-
-                if (data && data.length > 0) {
-                    const coords = [parseFloat(data[0].lat), parseFloat(data[0].lon)];
-                    coordinateCache[cacheKey] = coords;
-                    addMarker(coords, r);
-                } else {
-                    // Specific fallback for Anini-y or other municipalities if address search fails
-                    const muniCoords = {
-                        'Anini-y': [10.4300, 121.9250],
-                        'Barbaza': [11.2167, 122.0333],
-                        'San Jose de Buenavista': [10.7431, 121.9422],
-                        'Sibalom': [10.7833, 122.0167],
-                        'Pandan': [11.7222, 122.0944],
-                        'Culasi': [11.4250, 122.0553]
-                    };
-                    const fallbackCoords = muniCoords[r.municipality] || [11.15, 122.04];
-                    addMarker(fallbackCoords, r);
+                    if (data && data.candidates && data.candidates.length > 0) {
+                        const coords = [parseFloat(data.candidates[0].location.y), parseFloat(data.candidates[0].location.x)];
+                        coordinateCache[cacheKey] = coords;
+                        addMarker(coords, r);
+                    } else {
+                        // Fallback to municipality if barangay fails
+                        const fbQuery = `${r.municipality}, Antique, Philippines`;
+                        const fbUrl = `https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/findAddressCandidates?f=json&singleLine=${encodeURIComponent(fbQuery)}&maxLocations=1`;
+                        const fbResp = await fetch(fbUrl);
+                        const fbData = await fbResp.json();
+                        
+                        if (fbData && fbData.candidates && fbData.candidates.length > 0) {
+                            const coords = [parseFloat(fbData.candidates[0].location.y), parseFloat(fbData.candidates[0].location.x)];
+                            coordinateCache[cacheKey] = coords;
+                            addMarker(coords, r);
+                        } else {
+                            // Absolute fallback coordinates array mapping just in case
+                            const muniCoords = {
+                                'San Jose de Buenavista': [10.7483, 121.9426],
+                                'Sibalom': [10.7833, 122.0167],
+                                'Pandan': [11.7222, 122.0944],
+                                'Culasi': [11.4250, 122.0553]
+                            };
+                            const fallbackCoords = muniCoords[r.municipality] || [11.15, 122.04];
+                            addMarker(fallbackCoords, r);
+                        }
+                    }
+                } catch (err) {
+                    console.error("Mapbox/Geocoding error:", err);
                 }
-            } catch (err) {
-                console.error("Geocoding error:", err);
             }
         }
     };

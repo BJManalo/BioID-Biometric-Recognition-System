@@ -76,14 +76,17 @@
             </div>
 
             <div style="display: flex; align-items: center; gap: 15px;">
+                <!-- Profile Indicator -->
+                <div class="profile-details" style="display: flex; align-items: center; background: #F1F5F9; padding: 0 15px; height: 40px; border-radius: 20px; border: 1px solid #E2E8F0; width: auto; overflow: visible; white-space: nowrap;">
+                    <i class='bx bxs-user-circle' style="font-size: 24px; color: #103155;"></i>
+                    <span id="profileName" class="admin_name" style="font-size: 14px; font-weight: 600; color: #1E293B; margin-left: 8px;">Officer</span>
+                </div>
+
                 <button id="scannerStatusBtn" class="scanner-square offline" title="Scanner Status" style="cursor:pointer;">
                     <i class='bx bx-fingerprint'></i>
                 </button>
-
             </div>
-        </nav>
-
-        <div class="home-content">
+        </nav>        <div class="home-content">
             <!-- DASHBOARD TAB -->
             <div id="dashboardTab" class="tab-content active">
                 <div class="overview-boxes">
@@ -171,7 +174,7 @@
                                     <th>Location</th>
                                     <th>Severity</th>
                                     <th>Status</th>
-                                    <th>Action</th>
+                                    <th style="text-align: center;">Action</th>
                                 </tr>
                             </thead>
                             <tbody id="fullReportsTableBody">
@@ -193,17 +196,17 @@
             <!-- RESIDENTS TAB -->
             <div id="residentsTab" class="tab-content">
                 <div class="box-white">
-                    <div class="title d-flex-between">
-                        <div class="d-flex" style="gap: 10px; align-items: center;">
+                    <div class="title d-flex-between" style="flex-wrap: wrap; gap: 15px;">
+                        <div class="d-flex" style="gap: 10px; align-items: center; flex-wrap: wrap;">
                             <span style="font-size: 15px; font-weight: 600; color: #1E293B;">Filter:</span>
-                            <select id="filterMunicipality" style="padding: 10px 15px; border-radius: 10px; border: 1px solid #CBD5E1; outline: none; font-size: 14px; color: #475569; background: #F8FAFC; height: 42px; cursor: pointer;">
-                                <option value="" selected>All Municipalities</option>
+                            <select id="filterMunicipality" style="padding: 8px 10px; border-radius: 10px; border: 1px solid #CBD5E1; outline: none; font-size: 14px; color: #475569; background: #F8FAFC; height: 42px; cursor: pointer; width: 135px; text-overflow: ellipsis;">
+                                <option value="" selected>Municipalities</option>
                             </select>
-                            <select id="filterBarangay" style="padding: 10px 15px; border-radius: 10px; border: 1px solid #CBD5E1; outline: none; font-size: 14px; color: #475569; background: #F8FAFC; height: 42px; cursor: pointer;" disabled>
-                                <option value="" selected>All Barangays</option>
+                            <select id="filterBarangay" style="padding: 8px 10px; border-radius: 10px; border: 1px solid #CBD5E1; outline: none; font-size: 14px; color: #475569; background: #F8FAFC; height: 42px; cursor: pointer; width: 100px; text-overflow: ellipsis;" disabled>
+                                <option value="" selected>Brgy</option>
                             </select>
                         </div>
-                        <div class="d-flex" style="gap: 10px;">
+                        <div class="d-flex" style="gap: 10px; flex-wrap: wrap; margin-left: auto; justify-content: flex-end;">
                             <button class="btn btn-danger" id="wipeHardwareBtn" style="background: #FEE2E2; color: #EF4444; border: 1.5px solid #FEE2E2;">
                                 <i class='bx bx-trash-alt'></i> <span class="mobile-hide-text">Wipe Hardware</span>
                             </button>
