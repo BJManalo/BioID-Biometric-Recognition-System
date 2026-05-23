@@ -1,4 +1,4 @@
-const CACHE_NAME = 'bioid-cache-v3';
+const CACHE_NAME = 'bioid-cache-v4';
 const urlsToCache = [
   'index.html',
   'assets/css/style.css',
