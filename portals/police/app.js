@@ -50,7 +50,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Identify Jurisdiction and Officer
     const officerName = `${activeUserData.first_name} ${activeUserData.last_name}`;
-    const assignedJurisdiction = activeUserData.jurisdiction;
+    const assignedJurisdiction = activeUserData.municipality;
 
     // Update UI Elements
     const profileNameEl = document.getElementById('profileName');
@@ -70,12 +70,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Sidebar Logic
     const sidebar = document.querySelector(".sidebar");
     const sidebarBtn = document.querySelector(".sidebarBtn");
-    sidebarBtn.onclick = function () {
-        sidebar.classList.toggle("active");
-        if (sidebar.classList.contains("active")) {
-            sidebarBtn.classList.replace("bx-menu", "bx-menu-alt-right");
-        } else {
-            sidebarBtn.classList.replace("bx-menu-alt-right", "bx-menu");
+    if (sidebarBtn) {
+        sidebarBtn.onclick = function () {
+            if (sidebar) sidebar.classList.toggle("active");
+            if (sidebar && sidebar.classList.contains("active")) {
+                sidebarBtn.classList.replace("bx-menu", "bx-menu-alt-right");
+            } else {
+                sidebarBtn.classList.replace("bx-menu-alt-right", "bx-menu");
+            }
         }
     }
 
@@ -146,11 +148,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Pre-fill
     if (activeUserData) {
-        document.getElementById('settingsUsername').value = activeUserData.username || '';
-        document.getElementById('settingsFirstName').value = activeUserData.first_name || '';
-        document.getElementById('settingsLastName').value = activeUserData.last_name || '';
-        document.getElementById('settingsContact').value = activeUserData.contact_number || '';
-        document.getElementById('settingsPassword').value = activeUserData.temporary_password || '';
+        const setVal = (id, val) => {
+            const el = document.getElementById(id);
+            if (el) el.value = val;
+        };
+        setVal('settingsUsername', activeUserData.username || '');
+        setVal('settingsFirstName', activeUserData.first_name || '');
+        setVal('settingsLastName', activeUserData.last_name || '');
+        setVal('settingsContact', activeUserData.contact_number || '');
+        setVal('settingsPassword', activeUserData.temporary_password || '');
     }
 
     // Password Toggle
@@ -158,37 +164,43 @@ document.addEventListener('DOMContentLoaded', async () => {
         icon.onclick = () => {
             const fieldId = icon.getAttribute('data-target');
             const field = document.getElementById(fieldId);
-            if (field.type === 'password') {
-                field.type = 'text';
-                icon.classList.replace('bx-hide', 'bx-show');
-            } else {
-                field.type = 'password';
-                icon.classList.replace('bx-show', 'bx-hide');
+            if (field) {
+                if (field.type === 'password') {
+                    field.type = 'text';
+                    icon.classList.replace('bx-hide', 'bx-show');
+                } else {
+                    field.type = 'password';
+                    icon.classList.replace('bx-show', 'bx-hide');
+                }
             }
         };
     });
 
-    openSettingsBtn.onclick = (e) => {
-        e.preventDefault();
-        settingsModal.style.display = 'flex';
-        profileMenu.classList.remove('show');
-    };
+    if (openSettingsBtn) {
+        openSettingsBtn.onclick = (e) => {
+            e.preventDefault();
+            if (settingsModal) settingsModal.style.display = 'flex';
+            if (profileMenu) profileMenu.classList.remove('show');
+        };
+    }
 
     const sidebarSettingsBtn = document.getElementById('sidebarSettingsBtn');
     if (sidebarSettingsBtn) {
         sidebarSettingsBtn.onclick = (e) => {
             e.preventDefault();
-            settingsModal.style.display = 'flex';
+            if (settingsModal) settingsModal.style.display = 'flex';
         };
     }
 
+    if (closeSettingsBtn) {
+        closeSettingsBtn.onclick = () => {
+            if (settingsModal) settingsModal.style.display = 'none';
+        };
+    }
 
-    closeSettingsBtn.onclick = () => {
-        settingsModal.style.display = 'none';
-    };
-
-    settingsForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
+    if (settingsForm) {
+        settingsForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
         
         const updateData = {
             username: document.getElementById('settingsUsername').value.trim(),
@@ -218,6 +230,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             showCustomAlert(err.message || "Update failed.", "error", "Error");
         }
     });
+    }
 
     // 5. ACCIDENT REPORTS MANAGEMENT
     const openAddReportBtn = document.getElementById('openAddReportBtn');
@@ -261,21 +274,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         muniInput.appendChild(opt);
     });
 
-    // LOCK TO ASSIGNED JURISDICTION
-    if (assignedJurisdiction && antiqueData[assignedJurisdiction]) {
-        muniInput.value = assignedJurisdiction;
-        muniInput.disabled = true; // Prevent changing municipality
-
-        // Initial population of barangays for assigned municipality
-        locInput.innerHTML = '<option value="" disabled selected>Select Barangay</option>';
-        antiqueData[assignedJurisdiction].sort().forEach(brgy => {
-            const opt = document.createElement('option');
-            opt.value = brgy;
-            opt.textContent = brgy;
-            locInput.appendChild(opt);
-        });
-        locInput.disabled = false;
-    }
+    // No jurisdiction lock - allow any municipality
 
     // Handle Municipality Change
     muniInput.onchange = () => {
@@ -317,13 +316,24 @@ document.addEventListener('DOMContentLoaded', async () => {
             dateInput.value = formattedDate;
 
             // Set Municipality and trigger barangay list
-            muniInput.value = report.jurisdiction;
+            muniInput.value = report.municipality;
             muniInput.onchange(); // Trigger population
             locInput.value = report.location;
 
             sevInput.value = report.severity;
             statInput.value = report.status;
-            invInput.value = report.involved_biometrics || '';
+            
+            const remInput = document.getElementById('reportRemarks');
+            let invText = report.involved_biometrics || '';
+            if (remInput) remInput.value = '';
+            
+            if (invText.includes('\n\nRemarks:\n')) {
+                const parts = invText.split('\n\nRemarks:\n');
+                invInput.value = parts[0];
+                if (remInput) remInput.value = parts[1];
+            } else {
+                invInput.value = invText;
+            }
 
             // Toggle based on existing data
             const isIdentified = invInput.value && invInput.value.includes("VICTIM IDENTIFIED AUTOMATICALLY");
@@ -359,15 +369,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                 String(d.getMinutes()).padStart(2, '0');
             dateInput.value = formattedDate;
 
-            // Default to officer's own jurisdiction
-            if (assignedJurisdiction) {
-                muniInput.value = assignedJurisdiction;
-            }
+            muniInput.value = "";
             muniInput.onchange(); // Populate barangays
 
             sevInput.value = "Minor";
             statInput.value = "Reported";
             invInput.value = "";
+            const remInput = document.getElementById('reportRemarks');
+            if (remInput) remInput.value = "";
             if (victimInfoArea) victimInfoArea.style.display = 'none';
             
             // Reset Scanner UI
@@ -379,19 +388,34 @@ document.addEventListener('DOMContentLoaded', async () => {
         reportModal.classList.add('show');
     };
 
-    openAddReportBtn.onclick = () => openReportModal();
-    closeReportBtn.onclick = cancelReportBtn.onclick = () => reportModal.classList.remove('show');
+    if (openAddReportBtn) openAddReportBtn.onclick = () => openReportModal();
+    if (closeReportBtn) {
+        closeReportBtn.onclick = () => {
+            if (reportModal) reportModal.classList.remove('show');
+        };
+    }
+    if (cancelReportBtn) {
+        cancelReportBtn.onclick = () => {
+            if (reportModal) reportModal.classList.remove('show');
+        };
+    }
 
     reportForm.onsubmit = async (e) => {
         e.preventDefault();
         const id = document.getElementById('reportId').value;
+        let finalInvolved = document.getElementById('reportInvolved').value.trim();
+        const remarksVal = document.getElementById('reportRemarks').value.trim();
+        if (remarksVal) {
+            finalInvolved += "\n\nRemarks:\n" + remarksVal;
+        }
+
         const reportData = {
             datetime: document.getElementById('reportDateTime').value,
-            jurisdiction: assignedJurisdiction || document.getElementById('reportMunicipality').value,
+            municipality: document.getElementById('reportMunicipality').value,
             location: document.getElementById('reportLocation').value,
             severity: document.getElementById('reportSeverity').value,
             status: document.getElementById('reportStatus').value,
-            involved_biometrics: document.getElementById('reportInvolved').value.trim(),
+            involved_biometrics: finalInvolved,
             reporting_officer: officerName
         };
 
@@ -449,7 +473,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             const { data: reports, error } = await supabase
                 .from('accident_reports')
                 .select('*')
-                .eq('jurisdiction', (assignedJurisdiction || '').trim())
                 .order('datetime', { ascending: false });
 
             if (error) throw error;
@@ -487,7 +510,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             row.innerHTML = `
                 <td>${date}</td>
                 <td><div style="font-weight:600; color:#1e293b;">${victimName}</div></td>
-                <td>${r.location}</td>
+                <td>${r.location}, ${r.municipality}</td>
                 <td>${r.severity}</td>
                 <td>${r.status}</td>
                 <td>
@@ -592,30 +615,28 @@ document.addEventListener('DOMContentLoaded', async () => {
     let map, fullMap;
     let markerLayer = L.layerGroup();
     let fullMarkerLayer = L.layerGroup();
-    const coordinateCache = {};
+    const geocodeCache = {};
 
     const geocodeAndPlot = async (report) => {
-        const key = `${report.location}, ${report.jurisdiction}`;
-        let coords = coordinateCache[key];
+        const key = `${report.location}, ${report.municipality}`;
+        let coords = geocodeCache[key];
 
         if (!coords) {
             try {
-                // Add "Barangay" prefix to help the search engine
-                const query = `Barangay ${report.location}, ${report.jurisdiction}, Antique, Philippines`;
+                const query = `Barangay ${report.location}, ${report.municipality}, Antique, Philippines`;
                 const response = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1`);
                 const data = await response.json();
 
                 if (data && data.length > 0) {
                     coords = [parseFloat(data[0].lat), parseFloat(data[0].lon)];
-                    coordinateCache[key] = coords;
+                    geocodeCache[key] = coords;
                 } else {
-                    // Fallback to municipality center if barangay fails
-                    const fbQuery = `${report.jurisdiction}, Antique, Philippines`;
+                    const fbQuery = `${report.municipality}, Antique, Philippines`;
                     const fbRes = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(fbQuery)}&format=json&limit=1`);
                     const fbData = await fbRes.json();
                     if (fbData && fbData.length > 0) {
                         coords = [parseFloat(fbData[0].lat), parseFloat(fbData[0].lon)];
-                        console.log(`Fallback geocoding for ${report.location} to ${report.jurisdiction} center.`);
+                        console.log(`Fallback geocoding for ${report.location} to ${report.municipality} center.`);
                     }
                 }
             } catch (err) {
@@ -812,22 +833,43 @@ document.addEventListener('DOMContentLoaded', async () => {
     const cancelResidentBtn = document.getElementById('cancelResidentBtn');
     const residentModal = document.getElementById('residentModal');
     const residentForm = document.getElementById('residentForm');
+    const resMunicipalitySelect = document.getElementById('resMunicipality');
     const resBarangaySelect = document.getElementById('resBarangay');
 
+    if (resMunicipalitySelect) {
+        Object.keys(antiqueData).sort().forEach(muni => {
+            const opt = document.createElement('option');
+            opt.value = muni;
+            opt.textContent = muni;
+            resMunicipalitySelect.appendChild(opt);
+        });
+
+        resMunicipalitySelect.addEventListener('change', () => {
+            const muni = resMunicipalitySelect.value;
+            resBarangaySelect.innerHTML = '<option value="" disabled selected>Select Barangay</option>';
+            if (muni && antiqueData[muni]) {
+                antiqueData[muni].sort().forEach(brgy => {
+                    const opt = document.createElement('option');
+                    opt.value = brgy;
+                    opt.textContent = brgy;
+                    resBarangaySelect.appendChild(opt);
+                });
+                resBarangaySelect.disabled = false;
+            } else {
+                resBarangaySelect.disabled = true;
+            }
+        });
+    }
+
     const openResidentModal = () => {
-        // Populate Barangays for the resident modal
-        resBarangaySelect.innerHTML = '<option value="" disabled selected>Select Barangay</option>';
-        if (assignedJurisdiction && antiqueData[assignedJurisdiction]) {
-            antiqueData[assignedJurisdiction].sort().forEach(brgy => {
-                const opt = document.createElement('option');
-                opt.value = brgy;
-                opt.textContent = brgy;
-                resBarangaySelect.appendChild(opt);
-            });
-        }
-        
-        // Reset form
+        // Reset form first so it doesn't overwrite our custom dropdown logic
         residentForm.reset();
+
+        resMunicipalitySelect.value = "";
+        resMunicipalitySelect.disabled = false;
+        resBarangaySelect.innerHTML = '<option value="" disabled selected>Select Municipality First</option>';
+        resBarangaySelect.disabled = true;
+        
         // Reset Biometric UI
         const section = document.getElementById('biometricSection');
         const initialState = document.getElementById('resScannerInitialState');
@@ -905,6 +947,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const scannerBtn = document.getElementById('scannerStatusBtn');
 
     function updateScannerUI(status) {
+        if (!scannerBtn) return;
         scannerBtn.classList.remove('offline', 'online', 'scanning');
         if (status === 'online') {
             scannerBtn.classList.add('online');
@@ -1120,7 +1163,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                 } else if (line.includes("ENROLL_FAILED") || line.includes("ENROLL_ERROR")) {
                     console.error("Hardware Enrollment Failed:", line);
                     logToTerminal(`HARDWARE ERROR: Enrollment Failed. Reason: ${line}`, "ERROR");
-                    showCustomAlert("Enrollment Failed! Please ensure your finger is placed correctly and try again.", "error", "Hardware Error");
+                    
+                    if (line.includes("DUPLICATE")) {
+                        showCustomAlert("This fingerprint is already registered in the system! Please use a different finger.", "warning", "Duplicate Fingerprint");
+                    } else {
+                        showCustomAlert("Enrollment Failed! Please ensure your finger is placed correctly and try again.", "error", "Hardware Error");
+                    }
                     
                     // Reset UI to allow retry
                     const initialState = document.getElementById('resScannerInitialState');
@@ -1171,10 +1219,18 @@ document.addEventListener('DOMContentLoaded', async () => {
             
             // Search for the ID considering it might be comma-separated (e.g. "4,5")
             // Cases: exact match "4", starts with "4,", ends with ",4", or contains ",4,"
-            const { data: residents, error } = await supabase
+            const { data: allMatches, error } = await supabase
                 .from('residents')
                 .select('*')
-                .or(`fingerprint_id.eq.${hardwareId},fingerprint_id.ilike.${hardwareId},%,fingerprint_id.ilike.%,${hardwareId},fingerprint_id.ilike.%,${hardwareId},%`);
+                .ilike('fingerprint_id', `%${hardwareId}%`);
+
+            if (error) throw error;
+            
+            // Filter in javascript to ensure exact match of the ID in the comma-separated string
+            // This prevents "4" from incorrectly matching "14" or "40"
+            const residents = allMatches ? allMatches.filter(r => 
+                r.fingerprint_id && r.fingerprint_id.split(',').includes(String(hardwareId))
+            ) : [];
 
             if (error) throw error;
 
@@ -1221,7 +1277,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
                 
                 if (involvedInput) {
-                    involvedInput.value = `VICTIM IDENTIFIED AUTOMATICALLY\nName: ${person.first_name} ${person.last_name}\nBlood Type: ${person.blood_type || 'Unknown'}\nMedical: ${person.medical_info || 'None'}\nEmergency: ${person.emergency_contact || 'None'} (${person.emergency_phone || 'N/A'})\n\nNotes: `;
+                    involvedInput.value = `VICTIM IDENTIFIED AUTOMATICALLY\nName: ${person.first_name} ${person.last_name}\nBlood Type: ${person.blood_type || 'Unknown'}\nMedical: ${person.medical_info || 'None'}\nEmergency: ${person.emergency_contact || 'None'} (${person.emergency_phone || 'N/A'})`;
                     // Auto resize
                     involvedInput.style.height = 'auto';
                     involvedInput.style.height = involvedInput.scrollHeight + 'px';
@@ -1243,7 +1299,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // Manual Re-connect Buttons (scanner status button + fingerprint logo)
-    scannerBtn.onclick = () => initScannerConnection(true);
+    if (scannerBtn) scannerBtn.onclick = () => initScannerConnection(true);
     const logoFingerprintBtn = document.getElementById('logoFingerprintBtn');
     if (logoFingerprintBtn) logoFingerprintBtn.onclick = () => initScannerConnection(true);
 
@@ -1313,7 +1369,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const resData = {
                 first_name: document.getElementById('resFirstName').value,
                 last_name: document.getElementById('resLastName').value,
-                municipality: assignedJurisdiction,
+                municipality: document.getElementById('resMunicipality').value,
                 barangay: document.getElementById('resBarangay').value,
                 contact_number: document.getElementById('resContact').value,
                 emergency_contact: document.getElementById('resEmergencyName').value.trim() + " (" + document.getElementById('resEmergencyRelation').value.trim() + ")",
@@ -1321,8 +1377,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 blood_type: document.getElementById('resBloodType').value,
                 fingerprint_id: document.getElementById('resFingerprintId').value,
                 medical_info: document.getElementById('resMedical').value,
-                username: '',
-                password: ''
+                username: 'res_' + Date.now() + Math.floor(Math.random() * 1000),
+                password: 'default_password'
             };
 
             try {
@@ -1417,13 +1473,51 @@ document.addEventListener('DOMContentLoaded', async () => {
         };
     }
 
+    const filterMuni = document.getElementById('filterMunicipality');
+    const filterBrgy = document.getElementById('filterBarangay');
+
+    if (filterMuni && filterBrgy) {
+        Object.keys(antiqueData).sort().forEach(muni => {
+            const opt = document.createElement('option');
+            opt.value = muni;
+            opt.textContent = muni;
+            filterMuni.appendChild(opt);
+        });
+
+        filterMuni.onchange = () => {
+            filterBrgy.innerHTML = '<option value="" selected>All Barangays</option>';
+            if (filterMuni.value) {
+                antiqueData[filterMuni.value].sort().forEach(brgy => {
+                    const opt = document.createElement('option');
+                    opt.value = brgy;
+                    opt.textContent = brgy;
+                    filterBrgy.appendChild(opt);
+                });
+                filterBrgy.disabled = false;
+            } else {
+                filterBrgy.disabled = true;
+            }
+            loadResidents(); // Trigger reload
+        };
+
+        filterBrgy.onchange = () => {
+            loadResidents(); // Trigger reload
+        };
+    }
+
     const loadResidents = async () => {
         if (!residentsTableBody) return;
         try {
-            const { data: residents, error } = await supabase
-                .from('residents')
-                .select('*')
-                .eq('municipality', assignedJurisdiction);
+            let query = supabase.from('residents').select('*');
+            
+            if (filterMuni && filterMuni.value) {
+                query = query.eq('municipality', filterMuni.value);
+            }
+            if (filterBrgy && filterBrgy.value) {
+                query = query.eq('barangay', filterBrgy.value);
+            }
+
+            const { data: residents, error } = await query;
 
             if (error) throw error;
 

@@ -383,6 +383,25 @@ body {
     transform: rotate(180deg);
 }
 
+.home-section {
+    position: relative;
+    width: calc(100% - 260px);
+    left: 260px;
+    min-height: 100vh;
+    transition: all 0.5s ease;
+}
+
+/* Desktop Fullscreen Toggle */
+@media (min-width: 1025px) {
+    .sidebar.active {
+        left: -260px;
+    }
+    .sidebar.active ~ .home-section {
+        width: 100%;
+        left: 0;
+    }
+}
+
 .custom-dropdown-options {
     position: absolute;
     top: calc(100% + 5px);

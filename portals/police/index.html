@@ -168,7 +168,7 @@
                                 <tr>
                                     <th>Date & Time</th>
                                     <th>Victim Name</th>
-                                    <th>Barangay / Location</th>
+                                    <th>Location</th>
                                     <th>Severity</th>
                                     <th>Status</th>
                                     <th>Action</th>
@@ -194,7 +194,15 @@
             <div id="residentsTab" class="tab-content">
                 <div class="box-white">
                     <div class="title d-flex-between">
-                        <span>Residents in <span class="dynamic-muni">...</span></span>
+                        <div class="d-flex" style="gap: 10px; align-items: center;">
+                            <span style="font-size: 15px; font-weight: 600; color: #1E293B;">Filter:</span>
+                            <select id="filterMunicipality" style="padding: 10px 15px; border-radius: 10px; border: 1px solid #CBD5E1; outline: none; font-size: 14px; color: #475569; background: #F8FAFC; height: 42px; cursor: pointer;">
+                                <option value="" selected>All Municipalities</option>
+                            </select>
+                            <select id="filterBarangay" style="padding: 10px 15px; border-radius: 10px; border: 1px solid #CBD5E1; outline: none; font-size: 14px; color: #475569; background: #F8FAFC; height: 42px; cursor: pointer;" disabled>
+                                <option value="" selected>All Barangays</option>
+                            </select>
+                        </div>
                         <div class="d-flex" style="gap: 10px;">
                             <button class="btn btn-danger" id="wipeHardwareBtn" style="background: #FEE2E2; color: #EF4444; border: 1.5px solid #FEE2E2;">
                                 <i class='bx bx-trash-alt'></i> <span class="mobile-hide-text">Wipe Hardware</span>
@@ -293,7 +301,7 @@
                             <div style="display: flex; align-items: center; gap: 5px; color: #10B981; font-weight: 800; font-size: 13px; letter-spacing: 0.5px;">
                                 <i class='bx bxs-check-shield'></i> BIOMETRICS MATCHED
                             </div>
-                            <button type="button" id="rescanBtn" style="background: none; border: none; color: #64748B; font-size: 11px; text-decoration: underline; cursor: pointer; margin-top: 5px; opacity: 0.7;">Click here to re-scan</button>
+
                         </div>
                         <div id="victimInfoArea"
                             style="display: none; margin-top: 15px; text-align: left; background: #fff; padding: 15px; border-radius: 8px; border: 1px solid #CBD5E1;">
@@ -308,6 +316,12 @@
                         <label>Victim & Incident Details</label>
                         <textarea id="reportInvolved" class="textarea-auto" rows="4"
                             placeholder="Identify victim via scan above or enter details manually..."></textarea>
+                    </div>
+
+                    <div class="form-group mt-2">
+                        <label>Remarks</label>
+                        <textarea id="reportRemarks" class="textarea-auto" rows="3"
+                            placeholder="Add any additional remarks or notes here..."></textarea>
                     </div>
 
                     <div class="form-actions mt-4">
@@ -346,11 +360,19 @@
                     </div>
                     <div class="form-row">
                         <div class="form-group">
-                            <label>Barangay</label>
-                            <select id="resBarangay" required>
-                                <option value="" disabled selected>Select Barangay</option>
+                            <label>Municipality</label>
+                            <select id="resMunicipality" required>
+                                <option value="" disabled selected>Select Municipality</option>
                             </select>
                         </div>
+                        <div class="form-group">
+                            <label>Barangay</label>
+                            <select id="resBarangay" required disabled>
+                                <option value="" disabled selected>Select Municipality First</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
                         <div class="form-group">
                             <label>Contact Number</label>
                             <input type="text" id="resContact" placeholder="09xxxxxxxxx">

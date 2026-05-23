@@ -362,7 +362,7 @@ document.addEventListener('DOMContentLoaded', () => {
             let query = supabase.from('police_accounts').select('*');
                 
                 if (filterMuni) {
-                    query = query.eq('jurisdiction', filterMuni);
+                    query = query.eq('municipality', filterMuni);
                 }
 
                 const { data, error } = await query;
@@ -374,7 +374,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         name: `${u.first_name} ${u.last_name}`,
                         username: u.username,
                         role: 'POLICE',
-                        municipality: u.jurisdiction,
+                        municipality: u.municipality,
                         contact: u.contact_number,
                         status: u.status || 'Active'
                     })));
@@ -603,7 +603,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     username: username,
                     first_name: firstName,
                     last_name: lastName,
-                    jurisdiction: municipality,
+                    municipality: municipality,
                     contact_number: contact,
                     temporary_password: tempPassword
                 }])
@@ -970,7 +970,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const activeCasesTitle = document.querySelector('#active-casesTab .title span');
 
         if (currentMuniFilter) {
-            filtered = filtered.filter(r => r.jurisdiction === currentMuniFilter);
+            filtered = filtered.filter(r => r.municipality === currentMuniFilter);
         }
 
         if (currentMonthFilter) {
@@ -1026,7 +1026,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <tr>
                     <td>${date}</td>
                     <td><div style="font-weight: 600; color: #1E293B;">${victimName}</div></td>
-                    <td><span class="badge badge-jurisdiction">${r.jurisdiction}</span></td>
+                    <td><span class="badge badge-jurisdiction">${r.municipality}</span></td>
                     <td>${r.location}</td>
                     <td><span class="badge ${sevClass}">${r.severity}</span></td>
                     <td><span class="badge badge-pending">${r.status}</span></td>
@@ -1080,8 +1080,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const muniCounts = {};
         municipalities.forEach(m => muniCounts[m] = 0);
         reports.forEach(r => {
-            if (muniCounts.hasOwnProperty(r.jurisdiction)) {
-                muniCounts[r.jurisdiction]++;
+            if (muniCounts.hasOwnProperty(r.municipality)) {
+                muniCounts[r.municipality]++;
             }
         });
 
@@ -1149,8 +1149,8 @@ document.addEventListener('DOMContentLoaded', () => {
         markerLayer.clearLayers();
 
         for (const r of reports) {
-            const query = `${r.location}, ${r.jurisdiction}, Antique, Philippines`;
-            const cacheKey = `${r.location}, ${r.jurisdiction}`;
+            const query = `${r.location}, ${r.municipality}, Antique, Philippines`;
+            const cacheKey = `${r.location}, ${r.municipality}`;
 
             if (coordinateCache[cacheKey]) {
                 addMarker(coordinateCache[cacheKey], r);
@@ -1178,7 +1178,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         'Pandan': [11.7222, 122.0944],
                         'Culasi': [11.4250, 122.0553]
                     };
-                    const fallbackCoords = muniCoords[r.jurisdiction] || [11.15, 122.04];
+                    const fallbackCoords = muniCoords[r.municipality] || [11.15, 122.04];
                     addMarker(fallbackCoords, r);
                 }
             } catch (err) {
@@ -1189,14 +1189,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const addMarker = (coords, report) => {
         // Use the municipality color from the shared color map
-        const mColor = muniColorMap[report.jurisdiction] || '#64B5F6';
+        const mColor = muniColorMap[report.municipality] || '#64B5F6';
         const icon = createMarkerIcon(mColor);
 
         L.marker(coords, { icon: icon })
             .addTo(markerLayer)
             .bindPopup(`
                 <div style="font-family: 'Inter', sans-serif; padding: 5px;">
-                    <b style="color: #103155; display: block; margin-bottom: 5px;">${report.jurisdiction}: ${report.location}</b>
+                    <b style="color: #103155; display: block; margin-bottom: 5px;">${report.municipality}: ${report.location}</b>
                     <span style="font-size: 12px; color: #64748B;">
                         Severity: <b style="color: ${report.severity === 'Critical' ? '#EF4444' : '#103155'}">${report.severity}</b><br>
                         Status: <b>${report.status}</b><br>
@@ -1225,12 +1225,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 item.style.alignItems = 'flex-start';
                 item.style.gap = '12px';
 
-                const muniColor = muniColorMap[r.jurisdiction] || '#2C74B3';
+                const muniColor = muniColorMap[r.municipality] || '#2C74B3';
                 item.innerHTML = `
                     <div style="background: ${muniColor}; width: 8px; height: 8px; border-radius: 50%; margin-top: 6px; flex-shrink: 0;"></div>
                     <div style="flex: 1;">
                         <p style="margin: 0; font-size: 14px; color: #1E293B; font-weight: 500;">
-                            <b>${r.jurisdiction}</b>: ${r.severity} incident reported at ${r.location}
+                            <b>${r.municipality}</b>: ${r.severity} incident reported at ${r.location}
                         </p>
                         <span style="font-size: 12px; color: #64748B; font-weight: 500;">${timeAgo}</span>
                     </div>
