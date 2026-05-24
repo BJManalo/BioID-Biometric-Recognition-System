@@ -1089,8 +1089,8 @@ nav {
 }
 
 /* Filter Dropdowns Default (Desktop) */
-#filterMunicipality { width: 135px; }
-#filterBarangay { width: 100px; }
+#filterMunicipality { width: 220px; }
+#filterBarangay { width: 180px; }
 
 .filter-container {
     display: flex;
