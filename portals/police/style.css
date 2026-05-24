@@ -167,6 +167,10 @@ nav {
     font-weight: 600;
     color: var(--police-text);
     margin: 0 10px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 150px;
 }
 
 /* Home Content */
@@ -915,12 +919,16 @@ nav {
     }
 
     .profile-details .admin_name {
-        display: none;
+        display: inline-block !important;
+        max-width: 80px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
     .profile-details {
-        padding-right: 0;
-        width: 45px;
+        padding-right: 15px;
+        width: auto;
         justify-content: center;
     }
 

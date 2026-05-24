@@ -692,6 +692,9 @@ body {
     color: #1E293B !important;
     margin: 0 12px;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 150px;
 }
 
 /* --- Premium Glass Dropdown (Mobile & Desktop) --- */
@@ -739,7 +742,11 @@ body {
     }
 
     .profile-details .admin_name {
-        display: none !important;
+        display: inline-block !important;
+        max-width: 80px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
     .chart-container, .map-container {
