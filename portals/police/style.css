@@ -918,9 +918,13 @@ nav {
         padding: 15px !important;
     }
 
+    .badge-jurisdiction {
+        display: none !important;
+    }
+
     .profile-details .admin_name {
         display: inline-block !important;
-        max-width: 80px;
+        max-width: 150px;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
