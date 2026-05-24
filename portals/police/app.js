@@ -136,7 +136,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     });
 
-    // 3. PROFILE DROPDOWN LOGIC
+    // 3. PROFILE DROPDOWN & EXPAND LOGIC
+    const profileDetailsDiv = document.querySelector('.profile-details');
+    if (profileDetailsDiv) {
+        profileDetailsDiv.addEventListener('click', (e) => {
+            if (window.innerWidth <= 768) {
+                profileDetailsDiv.classList.toggle('expanded');
+            }
+        });
+    }
+
     const profileBtn = document.getElementById('profileDropdownBtn');
     const profileMenu = document.getElementById('profileMenu');
 

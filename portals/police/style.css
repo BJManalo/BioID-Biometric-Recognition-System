@@ -922,19 +922,32 @@ nav {
         display: none !important;
     }
 
+    .profile-details {
+        padding: 0 !important;
+        width: 38px !important;
+        justify-content: center !important;
+        transition: all 0.3s ease;
+    }
+
+    .profile-details.expanded {
+        padding: 0 15px !important;
+        width: auto !important;
+        justify-content: flex-start !important;
+    }
+
     .profile-details .admin_name {
-        display: inline-block !important;
+        display: none !important;
         max-width: 150px;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
     }
 
-    .profile-details {
-        padding-right: 15px;
-        width: auto;
-        justify-content: center;
+    .profile-details.expanded .admin_name {
+        display: inline-block !important;
     }
+
+
 
     .profile-details i.bx-chevron-down {
         display: none;

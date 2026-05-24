@@ -739,14 +739,28 @@ body {
         background: rgba(255, 255, 255, 0.1) !important;
         backdrop-filter: blur(5px);
         border-color: rgba(255, 255, 255, 0.2);
+        padding: 0 !important;
+        width: 38px !important;
+        justify-content: center !important;
+        transition: all 0.3s ease;
+    }
+
+    .profile-details.expanded {
+        padding: 0 15px !important;
+        width: auto !important;
+        justify-content: flex-start !important;
     }
 
     .profile-details .admin_name {
-        display: inline-block !important;
-        max-width: 80px;
+        display: none !important;
+        max-width: 150px;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+    }
+
+    .profile-details.expanded .admin_name {
+        display: inline-block !important;
     }
 
     .chart-container, .map-container {

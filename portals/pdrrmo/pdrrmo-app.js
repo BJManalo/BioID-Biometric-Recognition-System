@@ -47,6 +47,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // PROFILE DROPDOWN
+    const profileDetailsDiv = document.querySelector('.profile-details');
+    if (profileDetailsDiv) {
+        profileDetailsDiv.addEventListener('click', (e) => {
+            if (window.innerWidth <= 768) {
+                profileDetailsDiv.classList.toggle('expanded');
+            }
+        });
+    }
+
     const profileDropdownBtn = document.getElementById('profileDropdownBtn');
     const profileDropdown = document.getElementById('profileDropdown');
 
