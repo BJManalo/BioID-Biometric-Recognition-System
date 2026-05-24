@@ -953,6 +953,10 @@ nav {
         display: none;
     }
 
+    .filter-container {
+        max-width: 100% !important;
+    }
+
     /* Icon-only buttons on mobile */
     .mobile-hide-text {
         display: none !important;
