@@ -54,7 +54,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Update UI Elements
     const profileNameEl = document.getElementById('profileName');
-    if (profileNameEl) profileNameEl.textContent = `Officer ${activeUserData.last_name}`;
+    if (profileNameEl) profileNameEl.textContent = `${activeUserData.jurisdiction || 'Unknown'} Police`;
     document.getElementById('municipalityBadge').textContent = `Jurisdiction: ${assignedJurisdiction}`;
     const jurisdictionTitleEl = document.getElementById('jurisdictionTitle');
     if (jurisdictionTitleEl) jurisdictionTitleEl.textContent = assignedJurisdiction;
