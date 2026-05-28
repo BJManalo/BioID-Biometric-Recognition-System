@@ -1073,8 +1073,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <tr>
                     <td>${date}</td>
                     <td><div style="font-weight: 600; color: #1E293B;">${victimName}</div></td>
-                    <td><span class="badge badge-jurisdiction">${r.municipality}</span></td>
-                    <td>${r.location}</td>
+                    <td>${r.location}, ${r.municipality}</td>
                     <td><span class="badge ${sevClass}">${r.severity}</span></td>
                     <td><span class="badge badge-pending">${r.status}</span></td>
                     <td style="max-width: 200px;">${displayRemarks}</td>
