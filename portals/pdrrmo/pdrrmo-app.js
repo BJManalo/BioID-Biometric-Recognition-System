@@ -186,11 +186,24 @@ document.addEventListener('DOMContentLoaded', () => {
     window.__originalConfirm = window.confirm;
 
     // CUSTOM ALERT OVERRIDE
-    window.alert = function (message) {
+    window.alert = function (message, type = 'success') {
         const modal = document.getElementById('customAlertModal');
         const msgEl = document.getElementById('customAlertMessage');
         const okBtn = document.getElementById('customAlertOkBtn');
         if (modal && msgEl && okBtn) {
+            const iconEl = modal.querySelector('i');
+            const modalContent = modal.querySelector('.modal-content');
+            if (iconEl && modalContent) {
+                if (type === 'info') {
+                    iconEl.className = "bx bx-info-circle";
+                    iconEl.style.color = "#10B981";
+                    modalContent.style.borderTopColor = "#10B981";
+                } else {
+                    iconEl.className = "bx bx-check-circle";
+                    iconEl.style.color = "#4CAF50";
+                    modalContent.style.borderTopColor = "#4CAF50";
+                }
+            }
             msgEl.innerHTML = message.replace(/\n/g, '<br>');
             modal.style.display = 'flex';
 
@@ -1047,7 +1060,7 @@ document.addEventListener('DOMContentLoaded', () => {
             let displayRemarks = remarksText;
             if (remarksText.length > 25 && remarksText !== 'N/A') {
                 const safeText = remarksText.replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/\n/g, '\\n');
-                displayRemarks = remarksText.substring(0, 25) + '... <a href="#" onclick="alert(\'' + safeText + '\'); return false;" style="color: #3b82f6; text-decoration: underline; font-weight: 600; white-space: nowrap;">Read More</a>';
+                displayRemarks = remarksText.substring(0, 25) + '... <a href="#" onclick="alert(\'' + safeText + '\', \'info\'); return false;" style="color: #3b82f6; text-decoration: underline; font-weight: 600; white-space: nowrap;">Read More</a>';
             }
 
             // Severity Color Mapping
