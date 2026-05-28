@@ -723,7 +723,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         if (riskMapEl) {
             map = L.map('riskMap', commonOptions).setView([11.15, 122.04], 12);
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png', {
                 attribution: '&copy; CartoDB'
             }).addTo(map);
             markerLayer.addTo(map);
@@ -731,7 +731,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         if (fullRiskMapEl) {
             fullMap = L.map('fullRiskMap', commonOptions).setView([11.15, 122.04], 12);
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png', {
                 attribution: '&copy; CartoDB'
             }).addTo(fullMap);
             fullMarkerLayer.addTo(fullMap);
