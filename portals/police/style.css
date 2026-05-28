@@ -922,6 +922,27 @@ nav {
         display: none !important;
     }
 
+    .recent-reports {
+        box-shadow: none !important;
+        border: none !important;
+    }
+}
+
+/* --- Print & Screen Utility Classes --- */
+@media screen {
+    .print-only {
+        display: none !important;
+    }
+}
+@media print {
+    .screen-only {
+        display: none !important;
+    }
+    .print-only {
+        display: inline !important;
+    }
+}
+
     .profile-details {
         padding: 0 !important;
         width: 38px !important;

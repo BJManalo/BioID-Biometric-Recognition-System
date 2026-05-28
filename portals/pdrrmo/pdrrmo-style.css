@@ -875,6 +875,21 @@ body {
     }
 }
 
+/* --- Print & Screen Utility Classes --- */
+@media screen {
+    .print-only {
+        display: none !important;
+    }
+}
+@media print {
+    .screen-only {
+        display: none !important;
+    }
+    .print-only {
+        display: inline !important;
+    }
+}
+
 /* --- Clean Print Styles (Smart-Aware) --- */
 @media print {
     /* 1. Hide ALL interface elements and dashboard components */
