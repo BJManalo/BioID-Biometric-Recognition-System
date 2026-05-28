@@ -528,12 +528,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
             }
 
-            let displayRemarks = remarksText;
-            if (remarksText.length > 25 && remarksText !== 'N/A') {
-                const safeText = remarksText.replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/\n/g, '\\n');
-                displayRemarks = remarksText.substring(0, 25) + '... <a href="#" onclick="showCustomAlert(\'' + safeText + '\', \'info\', \'Incident Remarks\'); return false;" style="color: #3b82f6; text-decoration: underline; font-weight: 600; white-space: nowrap;">Read More</a>';
-            }
-
             // Map severity to badges
             let sevBadge = 'badge-pending';
             if (r.severity === 'Critical') sevBadge = 'badge-critical';
@@ -546,7 +540,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <td>${r.location}, ${r.municipality}</td>
                 <td>${r.severity}</td>
                 <td>${r.status}</td>
-                <td style="max-width: 200px;">${displayRemarks}</td>
+                <td style="max-width: 250px; white-space: pre-wrap; word-break: break-word;">${remarksText}</td>
                 <td>
                     <div style="display: flex; gap: 8px; flex-wrap: nowrap; align-items: center; justify-content: center;">
                         <button class="btn-action btn-edit" title="Edit"><i class='bx bx-edit-alt'></i></button>
