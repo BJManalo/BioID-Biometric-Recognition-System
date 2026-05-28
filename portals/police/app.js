@@ -514,12 +514,17 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             // Extract victim name from the blob
             let victimName = "No Biometrics";
+            let remarksText = "N/A";
             if (r.involved_biometrics) {
                 const match = r.involved_biometrics.match(/Name:\s*([^\n]+)/);
                 if (match) {
                     victimName = match[1].trim();
                 } else {
                     victimName = "Non-Resident / Manual";
+                }
+                
+                if (r.involved_biometrics.includes('\n\nRemarks:\n')) {
+                    remarksText = r.involved_biometrics.split('\n\nRemarks:\n')[1].trim();
                 }
             }
 
@@ -535,6 +540,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <td>${r.location}, ${r.municipality}</td>
                 <td>${r.severity}</td>
                 <td>${r.status}</td>
+                <td style="max-width: 150px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${remarksText.replace(/"/g, '&quot;')}">${remarksText}</td>
                 <td>
                     <div style="display: flex; gap: 8px; flex-wrap: nowrap; align-items: center; justify-content: center;">
                         <button class="btn-action btn-edit" title="Edit"><i class='bx bx-edit-alt'></i></button>

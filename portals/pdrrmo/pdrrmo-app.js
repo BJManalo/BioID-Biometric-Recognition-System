@@ -1029,12 +1029,18 @@ document.addEventListener('DOMContentLoaded', () => {
         reports.forEach(r => {
             const date = new Date(r.datetime).toLocaleString();
 
-            // Extract Victim Name from involved_biometrics
+            // Extract Victim Name and Remarks from involved_biometrics
             let victimName = 'Anonymous';
-            if (r.involved_biometrics && r.involved_biometrics.includes('Name:')) {
-                const parts = r.involved_biometrics.split('Name:');
-                if (parts.length > 1) {
-                    victimName = parts[1].split('\n')[0].trim();
+            let remarksText = 'N/A';
+            if (r.involved_biometrics) {
+                if (r.involved_biometrics.includes('Name:')) {
+                    const parts = r.involved_biometrics.split('Name:');
+                    if (parts.length > 1) {
+                        victimName = parts[1].split('\n')[0].trim();
+                    }
+                }
+                if (r.involved_biometrics.includes('\n\nRemarks:\n')) {
+                    remarksText = r.involved_biometrics.split('\n\nRemarks:\n')[1].trim();
                 }
             }
 
@@ -1052,6 +1058,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td>${r.location}</td>
                     <td><span class="badge ${sevClass}">${r.severity}</span></td>
                     <td><span class="badge badge-pending">${r.status}</span></td>
+                    <td style="max-width: 150px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${remarksText.replace(/"/g, '&quot;')}">${remarksText}</td>
                     <td>${r.reporting_officer || 'Police Dept'}</td>
                 </tr>
             `;
