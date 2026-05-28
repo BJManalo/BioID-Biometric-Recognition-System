@@ -857,12 +857,7 @@ nav {
     }
 
     .sidebar-button span.dashboard {
-        font-size: 14px;
-        max-width: 150px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        display: block !important;
+        display: none !important;
     }
 
     .overview-boxes {
@@ -940,9 +935,9 @@ nav {
     }
     .print-only {
         display: inline !important;
-    }
 }
 
+@media (max-width: 768px) {
     .profile-details {
         padding: 0 !important;
         width: 38px !important;
