@@ -1044,6 +1044,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
 
+            let displayRemarks = remarksText;
+            if (remarksText.length > 25 && remarksText !== 'N/A') {
+                const safeText = remarksText.replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/\n/g, '\\n');
+                displayRemarks = remarksText.substring(0, 25) + '... <a href="#" onclick="alert(\'' + safeText + '\'); return false;" style="color: #3b82f6; text-decoration: underline; font-weight: 600; white-space: nowrap;">Read More</a>';
+            }
+
             // Severity Color Mapping
             let sevClass = 'badge-pending';
             if (r.severity === 'Critical') sevClass = 'badge-critical';
@@ -1058,7 +1064,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td>${r.location}</td>
                     <td><span class="badge ${sevClass}">${r.severity}</span></td>
                     <td><span class="badge badge-pending">${r.status}</span></td>
-                    <td style="max-width: 150px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${remarksText.replace(/"/g, '&quot;')}">${remarksText}</td>
+                    <td style="max-width: 200px;">${displayRemarks}</td>
                     <td>${r.reporting_officer || 'Police Dept'}</td>
                 </tr>
             `;
