@@ -66,6 +66,13 @@ app.get('/api/admin/system-users', async (req, res) => {
     res.json(data);
 });
 
+app.delete('/api/admin/system-users/:id', async (req, res) => {
+    const { id } = req.params;
+    const { error } = await supabase.from('system_users').delete().eq('id', id);
+    if (error) return res.status(500).json({ error: error.message });
+    res.json({ message: "System User Deleted Successfully" });
+});
+
 // 4. Police Accounts CRUD
 app.get('/api/police-accounts', async (req, res) => {
     const { jurisdiction } = req.query;

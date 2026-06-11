@@ -58,7 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 let userData = null;
                 let userRole = null;
 
-                // 1. Check system_users (Admin / PDRRMO / MDRRMO / BARANGAY)
+                // 1. Check system_users (Admin / PDRRMO)
                 const { data: adminUser, error: adminErr } = await supabase
                     .from('system_users')
                     .select('*')
@@ -66,19 +66,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     .eq('temp_password', password)
                     .maybeSingle();
 
-                if (adminUser) {
+                if (adminUser && adminUser.role === 'PDRRMO') {
                     userData = adminUser;
-                    userRole = adminUser.role; // PDRRMO, MDRRMO, or BARANGAY
-                    userData.role = userRole;
-
-                    // Parse location info for specific roles
-                    if (userRole === 'BARANGAY') {
-                        const parts = (adminUser.assigned_municipality || '').split(':');
-                        userData.municipality = parts[0] || '';
-                        userData.barangay = parts[1] || '';
-                    } else if (userRole === 'MDRRMO') {
-                        userData.municipality = adminUser.assigned_municipality || '';
-                    }
+                    userRole = 'PDRRMO';
                 } else {
                     // 2. Check police_accounts
                     const { data: policeUser, error: policeErr } = await supabase
@@ -91,22 +81,17 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (policeUser) {
                         userData = policeUser;
                         userRole = 'POLICE';
-                        userData.role = 'POLICE';
-                        userData.municipality = policeUser.jurisdiction; // Normalize key to municipality
                     }
                 }
 
                 if (userData) {
+                    userData.role = userRole; // Ensure role is preserved
                     sessionStorage.setItem('activeUserData', JSON.stringify(userData));
                     
                     if (userRole === 'PDRRMO') {
                         window.location.href = 'portals/pdrrmo/index.html';
-                    } else if (userRole === 'MDRRMO') {
-                        window.location.href = 'portals/mdrrmo/index.html';
                     } else if (userRole === 'POLICE') {
                         window.location.href = 'portals/police/index.html';
-                    } else if (userRole === 'BARANGAY') {
-                        window.location.href = 'portals/barangay/index.html';
                     }
                     return;
                 }

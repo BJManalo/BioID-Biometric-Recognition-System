@@ -201,8 +201,8 @@
             <div id="accountsTab" class="tab-content" style="display: none;">
                 <!-- Account Creation Button -->
                 <div class="create-account-section box-glass mt-4 d-flex-between align-items-center" style="padding: 20px;">
-                    <span class="title" style="margin: 0; font-size: 1.2rem; font-weight: 600; color: var(--text-color);">Police Accounts</span>
-                    <button class="btn btn-primary" id="toggleFormBtn"><i class='bx bx-plus'></i> New Police Account</button>
+                    <span class="title" style="margin: 0; font-size: 1.2rem; font-weight: 600; color: var(--text-color);">Municipal Accounts</span>
+                    <button class="btn btn-primary" id="toggleFormBtn"><i class='bx bx-plus'></i> New Municipal Account</button>
                 </div>
 
                 <!-- Unified Accounts Management -->
@@ -453,7 +453,7 @@
     <div id="accountFormModal" class="modal-overlay" style="display: none;">
         <div class="modal-content box-glass" style="max-width: 600px;">
             <div class="modal-header d-flex-between" style="border-bottom: 1px solid #E2E8F0; padding-bottom: 15px; margin-bottom: 20px;">
-                <h3 style="color: #1E293B; margin: 0; font-size: 18px;">Create Police Account</h3>
+                <h3 style="color: #1E293B; margin: 0; font-size: 18px;">Create Municipal Account</h3>
                 <i class='bx bx-x' id="closeAccountModal" style="font-size: 24px; cursor: pointer; color: #64748B;"></i>
             </div>
             <div class="modal-body">
@@ -506,7 +506,13 @@
                                 <i class='bx bx-show' id="togglePasswordBtn" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #64748B; font-size: 20px;"></i>
                             </div>
                         </div>
-                        <div class="form-group"></div>
+                        <div class="form-group">
+                            <label>Account Role</label>
+                            <select class="modern-select modal-input" id="roleSelect">
+                                <option value="POLICE" selected>Police (View-Only)</option>
+                                <option value="MDRRMO">MDRRMO (Accidents & Scanning)</option>
+                            </select>
+                        </div>
                     </div>
                     <div class="form-actions" style="margin-top: 25px; display: flex; justify-content: flex-end; gap: 10px;">
                         <button type="button" class="btn btn-secondary" id="cancelFormBtn">Cancel</button>

@@ -49,6 +49,12 @@
                 </a>
             </li>
             <li>
+                <a href="#" data-tab="barangay">
+                    <i class='bx bx-home-alt'></i>
+                    <span class="links_name">Barangay list</span>
+                </a>
+            </li>
+            <li>
                 <div class="sidebar-divider" style="border-top: 1px solid rgba(255, 255, 255, 0.1); margin: 15px 15px; height: 1px;"></div>
             </li>
             <li>
@@ -150,7 +156,7 @@
                 <div class="box-white">
                     <div class="title d-flex-between">
                         <span>Municipal Accident Reports</span>
-                        <button class="btn btn-primary" id="openAddReportBtn">
+                        <button class="btn btn-primary" id="openAddReportBtn" style="display: none !important;">
                             <i class='bx bx-plus'></i> Add Incident Report
                         </button>
                     </div>
@@ -164,7 +170,7 @@
                                     <th>Severity</th>
                                     <th>Status</th>
                                     <th>Remarks</th>
-                                    <th style="text-align: center;">Action</th>
+                                    <th style="text-align: center;">Details</th>
                                 </tr>
                             </thead>
                             <tbody id="fullReportsTableBody">
@@ -196,11 +202,11 @@
                                 <option value="" selected>Brgy</option>
                             </select>
                         </div>
-                        <div class="d-flex" style="gap: 10px; flex-wrap: wrap; margin-left: auto; justify-content: flex-end;">
-                            <button class="btn btn-danger" id="wipeHardwareBtn" style="background: #FEE2E2; color: #EF4444; border: 1.5px solid #FEE2E2;">
+                        <div class="d-flex" style="gap: 10px; flex-wrap: wrap; margin-left: auto; justify-content: flex-end; display: none !important;">
+                            <button class="btn btn-danger" id="wipeHardwareBtn" style="background: #FEE2E2; color: #EF4444; border: 1.5px solid #FEE2E2; display: none !important;">
                                 <i class='bx bx-trash-alt'></i> <span class="mobile-hide-text">Wipe Hardware</span>
                             </button>
-                            <button class="btn btn-primary" id="openAddResidentBtn">
+                            <button class="btn btn-primary" id="openAddResidentBtn" style="display: none !important;">
                                 <i class='bx bx-user-plus'></i> <span class="mobile-hide-text">Register New Resident</span>
                             </button>
                         </div>
@@ -213,13 +219,44 @@
                                     <th>Contact & Details</th>
                                     <th>Address</th>
                                     <th>Verification Status</th>
-                                    <th style="text-align: right;">Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="residentsTableBody">
                                 <tr>
-                                    <td colspan="5" style="text-align: center; padding: 30px; color: #94A3B8;">
+                                    <td colspan="4" style="text-align: center; padding: 30px; color: #94A3B8;">
                                         Loading residents database...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- BARANGAY TAB -->
+            <div id="barangayTab" class="tab-content">
+                <div class="box-white">
+                    <div class="title d-flex-between">
+                        <span>Barangay Accounts (<span class="dynamic-muni">...</span>)</span>
+                        <button class="btn btn-primary" id="openAddBarangayBtn">
+                            <i class='bx bx-plus'></i> Create Barangay Account
+                        </button>
+                    </div>
+                    <div class="table-responsive mt-4">
+                        <table class="reports-table">
+                            <thead>
+                                <tr>
+                                    <th>Barangay Name</th>
+                                    <th>Username</th>
+                                    <th>Representative Name</th>
+                                    <th>Contact Info</th>
+                                    <th style="text-align: right; padding-right: 20px;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="barangayTableBody">
+                                <tr>
+                                    <td colspan="5" style="text-align: center; padding: 30px; color: #94A3B8;">
+                                        Loading barangay database...
                                     </td>
                                 </tr>
                             </tbody>
@@ -453,6 +490,52 @@
                         <button type="submit" class="btn btn-primary" id="saveResidentBtn">
                             Save
                         </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Barangay Registration Modal -->
+    <div id="barangayModal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 500px; padding: 25px; border-radius: 16px; background: #fff; box-shadow: 0 10px 30px rgba(0,0,0,0.15);">
+            <div class="modal-header d-flex-between" style="border-bottom: 1px solid #E2E8F0; padding-bottom: 15px; margin-bottom: 20px;">
+                <h3 class="title" style="margin-bottom: 0; font-size: 1.25rem; font-weight: 700; color: #1E293B;">Create Barangay Account</h3>
+                <i class='bx bx-x' id="closeBarangayBtn" style="font-size: 24px; cursor: pointer; color: #64748B;"></i>
+            </div>
+            <div class="modal-body">
+                <form id="barangayForm">
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label style="display: block; font-size: 13px; color: #64748B; margin-bottom: 6px; font-weight: 500;">Select Barangay</label>
+                        <select id="brgySelect" required style="width: 100%; padding: 10px 15px; border-radius: 8px; border: 1px solid #CBD5E1; outline: none; font-size: 14px; color: #1E293B;">
+                            <option value="" disabled selected>Select Barangay</option>
+                        </select>
+                    </div>
+                    <div class="form-row" style="display: flex; gap: 15px; margin-bottom: 15px;">
+                        <div class="form-group" style="flex: 1;">
+                            <label style="display: block; font-size: 13px; color: #64748B; margin-bottom: 6px; font-weight: 500;">Representative First Name</label>
+                            <input type="text" id="brgyFirstName" placeholder="Enter first name" required style="width: 100%; padding: 10px 15px; border-radius: 8px; border: 1px solid #CBD5E1; outline: none; font-size: 14px;">
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label style="display: block; font-size: 13px; color: #64748B; margin-bottom: 6px; font-weight: 500;">Representative Last Name</label>
+                            <input type="text" id="brgyLastName" placeholder="Enter last name" required style="width: 100%; padding: 10px 15px; border-radius: 8px; border: 1px solid #CBD5E1; outline: none; font-size: 14px;">
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label style="display: block; font-size: 13px; color: #64748B; margin-bottom: 6px; font-weight: 500;">Contact Number</label>
+                        <input type="text" id="brgyContact" placeholder="09xxxxxxxxx" required style="width: 100%; padding: 10px 15px; border-radius: 8px; border: 1px solid #CBD5E1; outline: none; font-size: 14px;">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label style="display: block; font-size: 13px; color: #64748B; margin-bottom: 6px; font-weight: 500;">Username (Auto-Generated)</label>
+                        <input type="text" id="brgyUsername" placeholder="Select a barangay first" readonly style="width: 100%; padding: 10px 15px; border-radius: 8px; border: 1px solid #CBD5E1; background: #F8FAFC; color: #64748B; font-weight: 500;">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 20px;">
+                        <label style="display: block; font-size: 13px; color: #64748B; margin-bottom: 6px; font-weight: 500;">Temporary Password (Auto-Generated)</label>
+                        <input type="text" id="brgyPassword" placeholder="Select a barangay first" readonly style="width: 100%; padding: 10px 15px; border-radius: 8px; border: 1px solid #CBD5E1; background: #F8FAFC; color: #64748B; font-weight: 500;">
+                    </div>
+                    <div class="form-actions mt-4" style="display: flex; gap: 10px; justify-content: flex-end;">
+                        <button type="button" class="btn btn-cancel" id="cancelBarangayBtn" style="padding: 10px 20px; border-radius: 8px;">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id="saveBarangayBtn" style="padding: 10px 20px; border-radius: 8px;">Create Account</button>
                     </div>
                 </form>
             </div>

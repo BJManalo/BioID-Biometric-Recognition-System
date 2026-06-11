@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="./assets/icon-192-IaG75dOn.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BioID</title>
+    <!-- Boxicons -->
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet" />
+    <!-- Web Manifest -->
+    <link rel="manifest" href="./assets/manifest-B_3nI9tX.json" />
+    <script type="module" crossorigin src="./assets/index-DwPWPXOc.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-HWY4020s.css">
+  </head>
+  <body>
+    <div id="app"></div>
+    <script>
+      // Service Worker registration for PWA features
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('sw.js')
+            .then(reg => console.log('SW Registered'))
+            .catch(err => console.log('SW Failed', err));
+        });
+      }
+    </script>
+  </body>
+</html>

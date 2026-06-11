@@ -393,27 +393,53 @@ document.addEventListener('DOMContentLoaded', () => {
 
             let accounts = [];
 
-            // Fetch from police_accounts
+            // 1. Fetch from police_accounts (POLICE role)
             let query = supabase.from('police_accounts').select('*');
-                
-                if (filterMuni) {
-                    query = query.eq('jurisdiction', filterMuni);
-                }
+            if (filterMuni) {
+                query = query.eq('jurisdiction', filterMuni);
+            }
+            const { data: policeData, error: policeErr } = await query;
+            if (policeErr) throw policeErr;
+            
+            if (policeData) {
+                accounts = accounts.concat(policeData.map(u => ({
+                    id: u.id,
+                    name: `${u.first_name} ${u.last_name}`,
+                    username: u.username,
+                    role: 'POLICE',
+                    municipality: u.jurisdiction,
+                    contact: u.contact_number,
+                    status: 'Active'
+                })));
+            }
 
-                const { data, error } = await query;
-                if (error) throw error;
-                
-                if (data) {
-                    accounts = accounts.concat(data.map(u => ({
+            // 2. Fetch from system_users (MDRRMO and BARANGAY roles)
+            let sysQuery = supabase.from('system_users').select('*').in('role', ['MDRRMO', 'BARANGAY']);
+            const { data: sysData, error: sysErr } = await sysQuery;
+            if (sysErr) throw sysErr;
+
+            if (sysData) {
+                let mappedSys = sysData.map(u => {
+                    let muni = u.assigned_municipality || '';
+                    if (u.role === 'BARANGAY') {
+                        muni = muni.split(':')[0] || '';
+                    }
+                    return {
                         id: u.id,
                         name: `${u.first_name} ${u.last_name}`,
                         username: u.username,
-                        role: 'POLICE',
-                        municipality: u.jurisdiction,
+                        role: u.role,
+                        municipality: muni,
                         contact: u.contact_number,
                         status: u.status || 'Active'
-                    })));
+                    };
+                });
+
+                if (filterMuni) {
+                    mappedSys = mappedSys.filter(u => u.municipality === filterMuni);
                 }
+                accounts = accounts.concat(mappedSys);
+            }
 
             // Expose globally for auto-fill logic to be instant
             window.allPoliceAccounts = accounts;
@@ -427,10 +453,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 );
             }
 
-            // Update Dashboard Count for Police
-            const policeCount = accounts.filter(a => a.role === 'POLICE').length;
+            // Update Dashboard Count for Police + MDRRMO
+            const totalMunicipalAccounts = accounts.filter(a => a.role === 'POLICE' || a.role === 'MDRRMO').length;
             const countDisplay = document.getElementById('adminCount');
-            if (countDisplay) countDisplay.textContent = policeCount;
+            if (countDisplay) countDisplay.textContent = totalMunicipalAccounts;
 
             // Render Rows
             accountsTableBody.innerHTML = '';
@@ -452,6 +478,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 let roleColor = '#64748B';
                 if (account.role === 'MDRRMO') roleColor = '#FF9800';
                 if (account.role === 'POLICE') roleColor = '#2196F3';
+                if (account.role === 'BARANGAY') roleColor = '#E91E63';
                 if (account.role === 'RESIDENT') roleColor = '#10B981';
 
                 row.innerHTML = `
@@ -464,11 +491,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td>${account.contact || 'N/A'}</td>
                     <td>
                         <div style="display: flex; gap: 8px;">
-                            ${account.role === 'POLICE' ? `
-                                <button class="btn-icon btn-delete" data-id="${account.id}"><i class='bx bx-trash'></i></button>
-                            ` : `
-                                <button class="btn-icon btn-view" data-id="${account.id}"><i class='bx bx-show'></i></button>
-                            `}
+                            <button class="btn-icon btn-delete" data-id="${account.id}"><i class='bx bx-trash'></i></button>
                         </div>
                     </td>
                 `;
@@ -562,43 +585,48 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // Auto-fill Username and Password based on Municipality
+    // Auto-fill Username and Password based on Municipality and Role
     const municipalitySelect = document.getElementById('municipalitySelect');
-    if (municipalitySelect) {
-        municipalitySelect.addEventListener('change', async (e) => {
-            const muni = e.target.value;
-            console.log("Municipality selected:", muni);
-            if (!muni) return;
+    const roleSelect = document.getElementById('roleSelect');
+
+    function generateUserCredentials() {
+        if (!municipalitySelect) return;
+        const muni = municipalitySelect.value;
+        const role = roleSelect ? roleSelect.value : 'POLICE';
+        if (!muni) return;
+        
+        const strippedMuni = muni.replace(/\s+/g, '');
+        const usernameInput = document.getElementById('usernameInput');
+        const tempPasswordInput = document.getElementById('tempPasswordInput');
+        
+        if (usernameInput && tempPasswordInput) {
+            usernameInput.value = 'Generating...';
             
-            const strippedMuni = muni.replace(/\s+/g, '');
-            const usernameInput = document.getElementById('usernameInput');
-            const tempPasswordInput = document.getElementById('tempPasswordInput');
-            
-            if (usernameInput && tempPasswordInput) {
-                usernameInput.value = 'Generating...';
+            try {
+                let count = window.allPoliceAccounts ? window.allPoliceAccounts.filter(a => a.municipality === muni && a.role === role).length : 0;
                 
-                try {
-                    let count = window.allPoliceAccounts ? window.allPoliceAccounts.filter(a => a.municipality === muni).length : 0;
-                    
-                    let nextNum = count + 1;
-                    let generatedId = `${strippedMuni}Police${nextNum}`;
-                    
-                    // Guarantee uniqueness by checking all existing usernames
-                    while (window.allPoliceAccounts && window.allPoliceAccounts.some(a => a.username.toLowerCase() === generatedId.toLowerCase())) {
-                        nextNum++;
-                        generatedId = `${strippedMuni}Police${nextNum}`;
-                    }
-                    
-                    usernameInput.value = generatedId;
-                    tempPasswordInput.value = generatedId;
-                } catch (err) {
-                    console.error('Error in auto-generating ID:', err);
-                    usernameInput.value = '';
-                    tempPasswordInput.value = '';
+                let nextNum = count + 1;
+                let suffix = role === 'MDRRMO' ? 'Mdrrmo' : 'Police';
+                let generatedId = `${strippedMuni}${suffix}${nextNum}`;
+                
+                // Guarantee uniqueness by checking all existing usernames
+                while (window.allPoliceAccounts && window.allPoliceAccounts.some(a => a.username.toLowerCase() === generatedId.toLowerCase())) {
+                    nextNum++;
+                    generatedId = `${strippedMuni}${suffix}${nextNum}`;
                 }
+                
+                usernameInput.value = generatedId;
+                tempPasswordInput.value = generatedId;
+            } catch (err) {
+                console.error('Error in auto-generating ID:', err);
+                usernameInput.value = '';
+                tempPasswordInput.value = '';
             }
-        });
+        }
     }
+
+    if (municipalitySelect) municipalitySelect.addEventListener('change', generateUserCredentials);
+    if (roleSelect) roleSelect.addEventListener('change', generateUserCredentials);
 
     saveAccountBtn.addEventListener('click', async () => {
         const officerNameInput = document.getElementById('officerName');
@@ -611,7 +639,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let deptHead = officerNameInput ? officerNameInput.value.trim() : '';
         let username = usernameInput ? usernameInput.value.trim() : '';
         let municipality = municipalitySelectElement ? municipalitySelectElement.value : '';
-        let role = 'POLICE'; // Hardcoded to POLICE now
+        let role = roleSelectElement ? roleSelectElement.value : 'POLICE';
         let contact = contactNumberInput ? contactNumberInput.value.trim() : '';
         let tempPassword = tempPasswordInput ? tempPasswordInput.value : 'AntiquePolice2026!';
 
@@ -630,26 +658,45 @@ document.addEventListener('DOMContentLoaded', () => {
         saveAccountBtn.textContent = 'Saving to Database...';
         saveAccountBtn.disabled = true;
 
-        // DATABASE INSERT - Use Local API
+        // DATABASE INSERT
         try {
-            const { data, error } = await supabase
-                .from('police_accounts')
-                .insert([{
-                    username: username,
-                    first_name: firstName,
-                    last_name: lastName,
-                    jurisdiction: municipality,
-                    contact_number: contact,
-                    temporary_password: tempPassword
-                }])
-                .select();
+            let error;
+            if (role === 'POLICE') {
+                const res = await supabase
+                    .from('police_accounts')
+                    .insert([{
+                        username: username,
+                        first_name: firstName,
+                        last_name: lastName,
+                        jurisdiction: municipality,
+                        contact_number: contact,
+                        temporary_password: tempPassword
+                    }])
+                    .select();
+                error = res.error;
+            } else {
+                // MDRRMO
+                const res = await supabase
+                    .from('system_users')
+                    .insert([{
+                        username: username,
+                        role: 'MDRRMO',
+                        first_name: firstName,
+                        last_name: lastName,
+                        assigned_municipality: municipality,
+                        contact_number: contact,
+                        temp_password: tempPassword
+                    }])
+                    .select();
+                error = res.error;
+            }
 
             if (error) throw error;
 
             // Sync UI fully with Database
             const formEl = document.querySelector('.pdrrmo-account-form');
             if (formEl) formEl.reset();
-            alert(`The Police officer for ${municipality} can now log in securely.`);
+            alert(`The ${role} account for ${municipality} can now log in securely.`);
             fetchAccounts();
         } catch (error) {
             console.error('Account Creation Error:', error);
@@ -685,18 +732,30 @@ document.addEventListener('DOMContentLoaded', () => {
         const adminId = btn.getAttribute('data-id');
 
         if (btn.classList.contains('btn-delete')) {
-            if (await confirm("Delete?")) {
-
-                // If it was pulled from DB, delete from DB first
+            if (await confirm("Are you sure you want to delete this account?")) {
                 if (adminId) {
                     btn.disabled = true;
                     btn.innerHTML = "<i class='bx bx-loader bx-spin'></i>";
 
+                    const accountRow = window.allPoliceAccounts ? window.allPoliceAccounts.find(a => String(a.id) === String(adminId)) : null;
+                    const role = accountRow ? accountRow.role : 'POLICE';
+
                     try {
-                        const { error } = await supabase
-                            .from('police_accounts')
-                            .delete()
-                            .eq('id', adminId);
+                        let error;
+                        if (role === 'POLICE') {
+                            const res = await supabase
+                                .from('police_accounts')
+                                .delete()
+                                .eq('id', adminId);
+                            error = res.error;
+                        } else {
+                            // MDRRMO or BARANGAY
+                            const res = await supabase
+                                .from('system_users')
+                                .delete()
+                                .eq('id', adminId);
+                            error = res.error;
+                        }
 
                         if (error) throw error;
                         
@@ -715,14 +774,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                     return;
                 }
-
-                // Apply a quick fade out animation before deleting visually
-                row.style.transition = 'opacity 0.3s ease';
-                row.style.opacity = '0';
-                setTimeout(() => {
-                    row.remove();
-                    updateAdminCount();
-                }, 300);
             }
         }
     });

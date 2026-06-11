@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BioID - MDRRMO Portal</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Boxicons for icons -->
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Leaflet CSS for Map -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="sidebar">
+        <div class="logo-details">
+            <i class='bx bx-fingerprint' id="logoFingerprintBtn" style="cursor: pointer;" title="Click to connect scanner"></i>
+            <span class="logo_name">BioID</span>
+        </div>
+        <ul class="nav-links">
+            <li>
+                <a href="#" class="active" data-tab="dashboard">
+                    <i class='bx bx-grid-alt'></i>
+                    <span class="links_name">Dashboard</span>
+                </a>
+            </li>
+            <li>
+                <a href="#" data-tab="reports">
+                    <i class='bx bx-car'></i>
+                    <span class="links_name">Accident Reports</span>
+                </a>
+            </li>
+            <li>
+                <a href="#" data-tab="map">
+                    <i class='bx bx-map-alt'></i>
+                    <span class="links_name">High Risk Zones</span>
+                </a>
+            </li>
+            <li>
+                <a href="#" data-tab="residents">
+                    <i class='bx bx-group'></i>
+                    <span class="links_name">Residents List</span>
+                </a>
+            </li>
+            <li>
+                <div class="sidebar-divider" style="border-top: 1px solid rgba(255, 255, 255, 0.1); margin: 15px 15px; height: 1px;"></div>
+            </li>
+            <li>
+                <a href="#" id="sidebarSettingsBtn">
+                    <i class='bx bx-cog'></i>
+                    <span class="links_name">Settings</span>
+                </a>
+            </li>
+            <li>
+                <a href="../../index.html" id="sidebarLogoutBtn" onclick="sessionStorage.removeItem('activeUserData');">
+                    <i class='bx bx-log-out'></i>
+                    <span class="links_name">Log out</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <section class="home-section">
+        <nav>
+            <div class="sidebar-button">
+                <i class='bx bx-menu sidebarBtn'></i>
+                <span class="dashboard">MDRRMO Dashboard</span>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <!-- Profile Indicator -->
+                <div class="profile-details" style="display: flex; align-items: center; background: #F1F5F9; padding: 0 15px; height: 40px; border-radius: 20px; border: 1px solid #E2E8F0; width: auto; overflow: visible; white-space: nowrap;">
+                    <i class='bx bxs-user-circle' style="font-size: 24px; color: #103155;"></i>
+                    <span id="profileName" class="admin_name" style="font-size: 14px; font-weight: 600; color: #1E293B; margin-left: 8px;">MDRRMO Officer</span>
+                </div>
+
+                <button id="scannerStatusBtn" class="scanner-square offline" title="Scanner Status" style="cursor:pointer;">
+                    <i class='bx bx-fingerprint'></i>
+                </button>
+            </div>
+        </nav>
+
+        <div class="home-content">
+            <!-- DASHBOARD TAB -->
+            <div id="dashboardTab" class="tab-content active">
+                <div class="overview-boxes">
+                    <div class="box" style="cursor: pointer;" onclick="document.querySelector('.nav-links a[data-tab=\'reports\']').click()">
+                        <div class="right-side">
+                            <div class="box-topic">Total Accidents</div>
+                            <div class="number" id="stats-accidents">0</div>
+                            <div class="indicator">
+                                <span class="text">In <span class="dynamic-muni">...</span></span>
+                            </div>
+                        </div>
+                        <i class='bx bx-car cart'></i>
+                    </div>
+                    <div class="box" style="cursor: pointer;" onclick="document.querySelector('.nav-links a[data-tab=\'reports\']').click()">
+                        <div class="right-side">
+                            <div class="box-topic">Critical Cases</div>
+                            <div class="number" id="stats-critical">0</div>
+                            <div class="indicator">
+                                <span class="text">Requiring attention</span>
+                            </div>
+                        </div>
+                        <i class='bx bx-error cart'></i>
+                    </div>
+                    <div class="box" style="cursor: pointer;" onclick="document.querySelector('.nav-links a[data-tab=\'residents\']').click()">
+                        <div class="right-side">
+                            <div class="box-topic">Registered Residents</div>
+                            <div class="number" id="stats-residents">0</div>
+                            <div class="indicator">
+                                <span class="text">In municipality</span>
+                            </div>
+                        </div>
+                        <i class='bx bx-group cart'></i>
+                    </div>
+                </div>
+
+                <div class="analytics-row">
+                    <!-- Barangay Chart -->
+                    <div class="chart-container box-white">
+                        <div class="title">Accident Breakdown by Barangay</div>
+                        <div class="chart-content-layout">
+                            <div class="hero-stat">
+                                <div class="stat-circle">
+                                    <span class="main-number" id="stats-accidents-hero">0</span>
+                                    <span class="sub-label">Total Incidents</span>
+                                </div>
+                            </div>
+                            <div class="chart-wrapper">
+                                <canvas id="municipalityChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Map Container -->
+                    <div class="map-container box-white">
+                        <div class="title">High Risk Areas Map</div>
+                        <div id="riskMap"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- REPORTS TAB -->
+            <div id="reportsTab" class="tab-content">
+                <div class="box-white">
+                    <div class="title d-flex-between">
+                        <span>Accident Reports for <span class="dynamic-muni">...</span></span>
+                        <button class="btn btn-primary" id="openAddReportBtn">
+                            <i class='bx bx-plus'></i> Add Incident Report
+                        </button>
+                    </div>
+                    <div class="table-responsive mt-4">
+                        <table class="reports-table">
+                            <thead>
+                                <tr>
+                                    <th>Date & Time</th>
+                                    <th>Victim Name</th>
+                                    <th>Barangay</th>
+                                    <th>Severity</th>
+                                    <th>Status</th>
+                                    <th>Remarks</th>
+                                    <th style="text-align: center;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="fullReportsTableBody">
+                                <tr>
+                                    <td colspan="7" style="text-align: center; padding: 30px; color: #94A3B8;">
+                                        Loading reports database...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MAP TAB -->
+            <div id="mapTab" class="tab-content">
+                <div class="box-white" style="height: 700px;">
+                    <div class="title">Risk Map (<span class="dynamic-muni">...</span>)</div>
+                    <div id="fullRiskMap" style="height: 600px; border-radius: 12px;"></div>
+                </div>
+            </div>
+
+            <!-- RESIDENTS TAB -->
+            <div id="residentsTab" class="tab-content">
+                <div class="box-white">
+                    <div class="title d-flex-between" style="flex-wrap: wrap; gap: 15px;">
+                        <span>Residents Directory (<span class="dynamic-muni">...</span>)</span>
+                        <div class="filter-container">
+                            <span style="font-size: 15px; font-weight: 600; color: #1E293B;">Filter Barangay:</span>
+                            <select id="filterBarangay" style="padding: 8px 10px; border-radius: 10px; border: 1px solid #CBD5E1; outline: none; font-size: 14px; color: #475569; background: #F8FAFC; height: 42px; cursor: pointer; text-overflow: ellipsis;">
+                                <option value="" selected>All Barangays</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="reports-table">
+                            <thead>
+                                <tr>
+                                    <th>Full Name</th>
+                                    <th>Contact & Details</th>
+                                    <th>Address</th>
+                                    <th>Verification Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="residentsTableBody">
+                                <tr>
+                                    <td colspan="4" style="text-align: center; padding: 30px; color: #94A3B8;">
+                                        Loading residents database...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Accident Report Modal -->
+    <div id="reportModal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header d-flex-between">
+                <h3 class="title" id="reportModalTitle" style="margin-bottom: 0;">Add Incident Report</h3>
+                <i class='bx bx-x' id="closeReportBtn" style="font-size: 24px; cursor: pointer;"></i>
+            </div>
+            <div class="modal-body">
+                <form id="reportForm">
+                    <input type="hidden" id="reportId">
+                    <div class="form-group">
+                        <label>Date & Time</label>
+                        <input type="datetime-local" id="reportDateTime" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Municipality</label>
+                        <input type="text" id="reportMunicipality" readonly style="background: #F1F5F9; color: #64748B; border-color: #E2E8F0; font-weight: 500;">
+                    </div>
+                    <div class="form-group">
+                        <label>Barangay</label>
+                        <select id="reportLocation" required>
+                            <option value="" disabled selected>Select Barangay</option>
+                        </select>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Severity</label>
+                            <select id="reportSeverity" required>
+                                <option value="Minor">Minor</option>
+                                <option value="Moderate">Moderate</option>
+                                <option value="Severe">Severe</option>
+                                <option value="Critical">Critical</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Current Status</label>
+                            <select id="reportStatus" required>
+                                <option value="Reported">Reported</option>
+                                <option value="Under Investigation">Under Investigation</option>
+                                <option value="Resolved">Resolved</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="biometric-scan-section box-white"
+                        style="background: #F8FAFC; border: 2px dashed #E2E8F0; padding: 20px; margin-bottom: 20px; text-align: center; border-radius: 12px;">
+                        
+                        <!-- STATE 1: INITIAL (WAITING) -->
+                        <div id="scannerInitialState">
+                            <button type="button" class="btn btn-primary" id="scanVictimBtn" style="background: #103155;">
+                                <i class='bx bx-fingerprint'></i> Scan Victim Fingerprint
+                            </button>
+                            <div style="font-size: 12px; color: #64748B; margin-top: 8px;">
+                                Place victim's finger on the scanner and click button to auto-identify
+                            </div>
+                        </div>
+
+                        <!-- STATE 2: VERIFIED (SUCCESS) -->
+                        <div id="verifiedState" style="display: none; flex-direction: column; align-items: center; gap: 8px; padding: 10px;">
+                            <div style="font-size: 52px; color: #10B981; filter: drop-shadow(0 0 15px rgba(16, 185, 129, 0.4)); animation: scannerPulse 2s infinite;">
+                                <i class='bx bx-fingerprint'></i>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 5px; color: #10B981; font-weight: 800; font-size: 13px; letter-spacing: 0.5px;">
+                                <i class='bx bxs-check-shield'></i> BIOMETRICS MATCHED
+                            </div>
+                            <button type="button" id="resetIdentificationBtn" class="btn btn-cancel" style="padding: 5px 12px; font-size: 12px; border-radius: 6px; margin-top: 5px;">
+                                Reset Scan
+                            </button>
+                        </div>
+
+                        <!-- STATE 3: IDENTIFIED DETAILS -->
+                        <div id="victimInfoArea"
+                            style="display: none; margin-top: 15px; text-align: left; background: #fff; padding: 15px; border-radius: 8px; border: 1px solid #CBD5E1;">
+                            <div style="font-weight: 700; color: #10B981; font-size: 14px; margin-bottom: 5px;">
+                                <i class='bx bx-check-circle'></i> Victim Identified
+                            </div>
+                            <div style="font-size: 16px; font-weight: 600;" id="victimNameText">...</div>
+                            <div style="font-size: 13px; color: #64748B;" id="victimAddressText">...</div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Victim & Incident Details</label>
+                        <textarea id="reportInvolved" class="textarea-auto" rows="4"
+                            placeholder="Identify victim via scan above or enter details manually..."></textarea>
+                    </div>
+
+                    <div class="form-group mt-2">
+                        <label>Remarks</label>
+                        <textarea id="reportRemarks" class="textarea-auto" rows="3"
+                            placeholder="Add any additional remarks or notes here..."></textarea>
+                    </div>
+
+                    <div class="form-actions mt-4">
+                        <button type="button" class="btn btn-cancel" id="cancelReportBtn">
+                            Cancel
+                        </button>
+                        <button type="submit" class="btn btn-primary" id="saveReportBtn">
+                            Save Incident Report
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal-overlay">
+        <div class="modal-content profile-modal-box">
+            <div class="modal-header d-flex-between">
+                <h3 class="title" style="margin-bottom: 0;">Account Settings</h3>
+                <i class='bx bx-x' id="closeSettingsBtn" style="font-size: 24px; cursor: pointer;"></i>
+            </div>
+            <div class="modal-body">
+                <form id="settingsForm">
+                    <div class="form-group">
+                        <label>Username</label>
+                        <input type="text" id="settingsUsername" readonly style="background: #F1F5F9; color: #64748B; border-color: #E2E8F0;">
+                    </div>
+                    <div class="form-group">
+                        <label>First Name</label>
+                        <input type="text" id="settingsFirstName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Last Name</label>
+                        <input type="text" id="settingsLastName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Contact Number</label>
+                        <input type="text" id="settingsContact">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 25px;">
+                        <label style="display: block; font-size: 13px; margin-bottom: 8px;">Password</label>
+                        <div style="position: relative; display: flex; align-items: center;">
+                            <input type="password" id="settingsPassword" class="modal-input" placeholder="Enter password" style="width: 100%; border: 1px solid #e2e8f0; padding: 10px 15px; border-radius: 8px; padding-right: 40px;">
+                            <i class='bx bx-show toggle-settings-password' data-target="settingsPassword" style="position: absolute; right: 15px; cursor: pointer; color: #103155; font-size: 18px;"></i>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary"
+                        style="width: 100%; justify-content: center; background: #103155; color: #fff; padding: 12px; border-radius: 8px; border: none; font-weight: 600; margin-top: 15px; cursor: pointer;">Save Changes</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Alert Overlay -->
+    <div id="customAlert" class="custom-alert-overlay"
+        style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 5000;">
+        <div class="custom-alert-box"
+            style="background: #fff; padding: 30px; border-radius: 16px; text-align: center; max-width: 400px; width: 90%;">
+            <div class="custom-alert-icon" id="customAlertIcon" style="font-size: 48px; margin-bottom: 15px;"></div>
+            <h3 id="customAlertTitle" style="font-weight: 700; margin-bottom: 10px;">Alert</h3>
+            <p id="customAlertMessage" style="color: #64748B; font-size: 14px; margin-bottom: 20px;"></p>
+            <button onclick="closeCustomAlert()"
+                style="background: #103155; color: #fff; border: none; padding: 10px 25px; border-radius: 8px; cursor: pointer; font-weight: 600;">OK</button>
+        </div>
+    </div>
+
+    <!-- Custom Confirm Overlay -->
+    <div id="customConfirm" class="custom-alert-overlay"
+        style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 5001;">
+        <div class="custom-alert-box"
+            style="background: #fff; padding: 30px; border-radius: 16px; text-align: center; max-width: 400px; width: 90%;">
+            <div class="custom-alert-icon" style="font-size: 48px; margin-bottom: 15px; color: #D97706;">
+                <i class='bx bx-help-circle'></i>
+            </div>
+            <h3 id="customConfirmTitle" style="font-weight: 700; margin-bottom: 10px;">Confirm</h3>
+            <p id="customConfirmMessage" style="color: #64748B; font-size: 14px; margin-bottom: 20px;"></p>
+            <div style="display: flex; gap: 10px;">
+                <button id="customConfirmCancel" class="btn btn-cancel" style="flex:1;">Cancel</button>
+                <button id="customConfirmOk"
+                    style="flex:1; background: #EF4444; color: #fff; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 600;">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="app.js"></script>
+
+    <script>
+        function closeCustomAlert() {
+            document.getElementById('customAlert').style.display = 'none';
+        }
+    </script>
+</body>
+
+</html>
