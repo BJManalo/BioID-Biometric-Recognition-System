@@ -39,6 +39,12 @@ app.post('/api/auth/login', async (req, res) => {
     let { data: adminUser } = await supabase.from('system_users').select('*').ilike('username', username).eq('temp_password', password).maybeSingle();
     if (adminUser) return res.json({ user: adminUser, role: adminUser.role });
 
+    let { data: mdrrmoUser } = await supabase.from('mdrrmo').select('*').ilike('username', username).eq('temp_password', password).maybeSingle();
+    if (mdrrmoUser) return res.json({ user: mdrrmoUser, role: 'MDRRMO' });
+
+    let { data: brgyUser } = await supabase.from('barangays').select('*').ilike('username', username).eq('temp_password', password).maybeSingle();
+    if (brgyUser) return res.json({ user: brgyUser, role: 'BARANGAY' });
+
     let { data: policeUser } = await supabase.from('police_accounts').select('*').ilike('username', username).eq('temporary_password', password).maybeSingle();
     if (policeUser) return res.json({ user: policeUser, role: 'POLICE' });
 

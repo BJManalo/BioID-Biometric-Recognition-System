@@ -174,7 +174,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             try {
                 const { data, error } = await supabase
-                    .from('system_users')
+                    .from('barangays')
                     .update(updateData)
                     .eq('id', activeUserData.id)
                     .select();

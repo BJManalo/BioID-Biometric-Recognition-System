@@ -413,32 +413,44 @@ document.addEventListener('DOMContentLoaded', () => {
                 })));
             }
 
-            // 2. Fetch from system_users (MDRRMO and BARANGAY roles)
-            let sysQuery = supabase.from('system_users').select('*').in('role', ['MDRRMO', 'BARANGAY']);
-            const { data: sysData, error: sysErr } = await sysQuery;
-            if (sysErr) throw sysErr;
+            // 2. Fetch from mdrrmo table (MDRRMO role)
+            const { data: mdrrmoData, error: mdrrmoErr } = await supabase.from('mdrrmo').select('*');
+            if (mdrrmoErr) throw mdrrmoErr;
 
-            if (sysData) {
-                let mappedSys = sysData.map(u => {
-                    let muni = u.assigned_municipality || '';
-                    if (u.role === 'BARANGAY') {
-                        muni = muni.split(':')[0] || '';
-                    }
-                    return {
-                        id: u.id,
-                        name: `${u.first_name} ${u.last_name}`,
-                        username: u.username,
-                        role: u.role,
-                        municipality: muni,
-                        contact: u.contact_number,
-                        status: u.status || 'Active'
-                    };
-                });
-
+            if (mdrrmoData) {
+                let mappedMdrrmo = mdrrmoData.map(u => ({
+                    id: u.id,
+                    name: `${u.first_name} ${u.last_name}`,
+                    username: u.username,
+                    role: 'MDRRMO',
+                    municipality: u.assigned_municipality || '',
+                    contact: u.contact_number,
+                    status: 'Active'
+                }));
                 if (filterMuni) {
-                    mappedSys = mappedSys.filter(u => u.municipality === filterMuni);
+                    mappedMdrrmo = mappedMdrrmo.filter(u => u.municipality === filterMuni);
                 }
-                accounts = accounts.concat(mappedSys);
+                accounts = accounts.concat(mappedMdrrmo);
+            }
+
+            // 3. Fetch from barangays table (BARANGAY role)
+            const { data: brgyData, error: brgyErr } = await supabase.from('barangays').select('*');
+            if (brgyErr) throw brgyErr;
+
+            if (brgyData) {
+                let mappedBrgy = brgyData.map(u => ({
+                    id: u.id,
+                    name: `${u.first_name} ${u.last_name}`,
+                    username: u.username,
+                    role: 'BARANGAY',
+                    municipality: u.municipality || '',
+                    contact: u.contact_number,
+                    status: 'Active'
+                }));
+                if (filterMuni) {
+                    mappedBrgy = mappedBrgy.filter(u => u.municipality === filterMuni);
+                }
+                accounts = accounts.concat(mappedBrgy);
             }
 
             // Expose globally for auto-fill logic to be instant
@@ -748,8 +760,19 @@ document.addEventListener('DOMContentLoaded', () => {
                                 .delete()
                                 .eq('id', adminId);
                             error = res.error;
+                        } else if (role === 'MDRRMO') {
+                            const res = await supabase
+                                .from('mdrrmo')
+                                .delete()
+                                .eq('id', adminId);
+                            error = res.error;
+                        } else if (role === 'BARANGAY') {
+                            const res = await supabase
+                                .from('barangays')
+                                .delete()
+                                .eq('id', adminId);
+                            error = res.error;
                         } else {
-                            // MDRRMO or BARANGAY
                             const res = await supabase
                                 .from('system_users')
                                 .delete()

@@ -58,7 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 let userData = null;
                 let userRole = null;
 
-                // 1. Check system_users (Admin / PDRRMO / MDRRMO / BARANGAY)
+                // 1. Check system_users (Admin / PDRRMO)
                 const { data: adminUser, error: adminErr } = await supabase
                     .from('system_users')
                     .select('*')
@@ -68,31 +68,53 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (adminUser) {
                     userData = adminUser;
-                    userRole = adminUser.role; // PDRRMO, MDRRMO, or BARANGAY
+                    userRole = adminUser.role; // PDRRMO or Admin
                     userData.role = userRole;
-
-                    // Parse location info for specific roles
-                    if (userRole === 'BARANGAY') {
-                        const parts = (adminUser.assigned_municipality || '').split(':');
-                        userData.municipality = parts[0] || '';
-                        userData.barangay = parts[1] || '';
-                    } else if (userRole === 'MDRRMO') {
-                        userData.municipality = adminUser.assigned_municipality || '';
-                    }
                 } else {
-                    // 2. Check police_accounts
-                    const { data: policeUser, error: policeErr } = await supabase
-                        .from('police_accounts')
+                    // 1.1 Check mdrrmo table
+                    const { data: mdrrmoUser } = await supabase
+                        .from('mdrrmo')
                         .select('*')
                         .ilike('username', username)
-                        .eq('temporary_password', password)
+                        .eq('temp_password', password)
                         .maybeSingle();
+                    
+                    if (mdrrmoUser) {
+                        userData = mdrrmoUser;
+                        userRole = 'MDRRMO';
+                        userData.role = 'MDRRMO';
+                        userData.municipality = mdrrmoUser.assigned_municipality || '';
+                    } else {
+                        // 1.2 Check barangays table
+                        const { data: brgyUser } = await supabase
+                            .from('barangays')
+                            .select('*')
+                            .ilike('username', username)
+                            .eq('temp_password', password)
+                            .maybeSingle();
+                        
+                        if (brgyUser) {
+                            userData = brgyUser;
+                            userRole = 'BARANGAY';
+                            userData.role = 'BARANGAY';
+                            userData.municipality = brgyUser.municipality || '';
+                            userData.barangay = brgyUser.barangay || '';
+                        } else {
+                            // 2. Check police_accounts
+                            const { data: policeUser, error: policeErr } = await supabase
+                                .from('police_accounts')
+                                .select('*')
+                                .ilike('username', username)
+                                .eq('temporary_password', password)
+                                .maybeSingle();
 
-                    if (policeUser) {
-                        userData = policeUser;
-                        userRole = 'POLICE';
-                        userData.role = 'POLICE';
-                        userData.municipality = policeUser.jurisdiction; // Normalize key to municipality
+                            if (policeUser) {
+                                userData = policeUser;
+                                userRole = 'POLICE';
+                                userData.role = 'POLICE';
+                                userData.municipality = policeUser.jurisdiction; // Normalize key to municipality
+                            }
+                        }
                     }
                 }
 

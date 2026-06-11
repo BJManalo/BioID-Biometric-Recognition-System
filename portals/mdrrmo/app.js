@@ -172,7 +172,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             try {
                 const { data, error } = await supabase
-                    .from('system_users')
+                    .from('mdrrmo')
                     .update(updateData)
                     .eq('id', activeUserData.id)
                     .select();
@@ -795,17 +795,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!barangayTableBody) return;
 
         try {
-            const { data: users, error } = await supabase
-                .from('system_users')
+            const { data: brgyUsers, error } = await supabase
+                .from('barangays')
                 .select('*')
-                .eq('role', 'BARANGAY');
+                .eq('municipality', assignedJurisdiction);
 
             if (error) throw error;
-
-            const brgyUsers = users.filter(u => {
-                const parts = (u.assigned_municipality || '').split(':');
-                return parts[0] === assignedJurisdiction;
-            });
 
             barangayTableBody.innerHTML = '';
             if (brgyUsers.length === 0) {
@@ -814,8 +809,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
 
             brgyUsers.forEach(u => {
-                const parts = (u.assigned_municipality || '').split(':');
-                const brgy = parts[1] || '';
+                const brgy = u.barangay || '';
                 const name = `${u.first_name} ${u.last_name}`;
                 
                 const row = document.createElement('tr');
@@ -872,8 +866,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (usernameInput) usernameInput.value = account.username || '';
             if (passwordInput) passwordInput.value = account.temp_password || '';
 
-            const parts = (account.assigned_municipality || '').split(':');
-            const brgy = parts[1] || '';
+            const brgy = account.barangay || '';
             if (brgySelect) brgySelect.value = brgy;
         } else {
             document.getElementById('barangayModalTitle').textContent = "Add Barangay Account";
@@ -899,10 +892,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             const password = document.getElementById('brgyPassword').value.trim();
 
             const accountData = {
-                role: 'BARANGAY',
                 first_name: firstName,
                 last_name: lastName,
-                assigned_municipality: `${assignedJurisdiction}:${brgy}`,
+                municipality: assignedJurisdiction,
+                barangay: brgy,
                 contact_number: contact,
                 username: username,
                 temp_password: password
@@ -914,14 +907,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             try {
                 if (id) {
                     const { error } = await supabase
-                        .from('system_users')
+                        .from('barangays')
                         .update(accountData)
                         .eq('id', id);
                     if (error) throw error;
                     showCustomAlert("Barangay account updated successfully!", "success", "Account Saved");
                 } else {
                     const { data: existing, error: checkErr } = await supabase
-                        .from('system_users')
+                        .from('barangays')
                         .select('id')
                         .eq('username', username)
                         .maybeSingle();
@@ -933,7 +926,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     }
 
                     const { error } = await supabase
-                        .from('system_users')
+                        .from('barangays')
                         .insert([accountData]);
                     if (error) throw error;
                     showCustomAlert("Barangay account created successfully!", "success", "Account Created");
@@ -957,7 +950,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             async () => {
                 try {
                     const { error } = await supabase
-                        .from('system_users')
+                        .from('barangays')
                         .delete()
                         .eq('id', id);
                     if (error) throw error;
