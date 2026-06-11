@@ -47,6 +47,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const brgyNameMuniLabel = document.getElementById('brgyNameMuniLabel');
     if (brgyNameMuniLabel) brgyNameMuniLabel.textContent = `${brgyName}, ${muniName}`;
 
+    const brgyAccidentTitleBrgy = document.getElementById('brgyAccidentTitleBrgy');
+    if (brgyAccidentTitleBrgy) brgyAccidentTitleBrgy.textContent = `${brgyName}, ${muniName}`;
+
     // Fill Read-Only Inputs in Resident Registration Form
     const resMuniInput = document.getElementById('resMunicipality');
     const resBrgyInput = document.getElementById('resBarangay');
@@ -252,6 +255,88 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (closeResidentBtn) closeResidentBtn.onclick = () => residentModal.classList.remove('show');
     if (cancelResidentBtn) cancelResidentBtn.onclick = () => residentModal.classList.remove('show');
 
+    // Fetch and load accident reports scoped to this Barangay or its resident victims
+    const loadAccidentReports = async (residents = []) => {
+        const fullReportsTableBody = document.getElementById('fullReportsTableBody');
+        if (!fullReportsTableBody) return;
+
+        try {
+            const { data: reports, error } = await supabase
+                .from('accident_reports')
+                .select('*')
+                .eq('municipality', muniName)
+                .order('datetime', { ascending: false });
+
+            if (error) throw error;
+
+            const residentNames = new Set(
+                residents.map(r => `${r.first_name} ${r.last_name}`.toLowerCase().trim())
+            );
+
+            const filteredReports = reports.filter(r => {
+                if (r.location && r.location.toLowerCase() === brgyName.toLowerCase()) {
+                    return true;
+                }
+                if (r.involved_biometrics) {
+                    const match = r.involved_biometrics.match(/Name:\s*([^\n]+)/);
+                    if (match) {
+                        const victimName = match[1].trim().toLowerCase();
+                        if (residentNames.has(victimName)) return true;
+                    }
+                    for (const resName of residentNames) {
+                        if (r.involved_biometrics.toLowerCase().includes(resName)) return true;
+                    }
+                }
+                return false;
+            });
+
+            fullReportsTableBody.innerHTML = '';
+            if (filteredReports.length === 0) {
+                fullReportsTableBody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 30px; color: #94A3B8;">No accident reports found for ${brgyName}.</td></tr>`;
+                return;
+            }
+
+            filteredReports.forEach(r => {
+                const date = new Date(r.datetime).toLocaleString();
+                
+                let victimName = "No Biometrics";
+                let remarksText = "N/A";
+                if (r.involved_biometrics) {
+                    const match = r.involved_biometrics.match(/Name:\s*([^\n]+)/);
+                    if (match) {
+                        victimName = match[1].trim();
+                    } else {
+                        victimName = "Non-Resident / Manual";
+                    }
+                    
+                    if (r.involved_biometrics.includes('\n\nRemarks:\n')) {
+                        remarksText = r.involved_biometrics.split('\n\nRemarks:\n')[1].trim();
+                    }
+                }
+
+                let displayRemarks = `<span style="white-space: pre-wrap; word-break: break-word;">${remarksText}</span>`;
+                if (remarksText.length > 25 && remarksText !== 'N/A') {
+                    const safeText = remarksText.replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/\n/g, '\\n');
+                    const truncated = remarksText.substring(0, 25) + '... <a href="#" onclick="showCustomAlert(\'' + safeText + '\', \'info\', \'Incident Remarks\'); return false;" style="color: #3b82f6; text-decoration: underline; font-weight: 600; white-space: nowrap;">Read More</a>';
+                    displayRemarks = `<span>${truncated}</span>`;
+                }
+
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${date}</td>
+                    <td><div style="font-weight:600; color:#1e293b;">${victimName}</div></td>
+                    <td>${r.severity}</td>
+                    <td>${r.status}</td>
+                    <td style="max-width: 250px;">${displayRemarks}</td>
+                `;
+                fullReportsTableBody.appendChild(row);
+            });
+        } catch (e) {
+            console.error("Load accident reports error:", e);
+            fullReportsTableBody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 30px; color: #EF4444;">Failed to load accident reports.</td></tr>`;
+        }
+    };
+
     // Fetch and load residents scoped to this Barangay
     const loadResidents = async () => {
         try {
@@ -309,6 +394,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                     });
                 }
             }
+
+            // Load accident reports after loading residents
+            await loadAccidentReports(residents);
 
         } catch (e) {
             console.error("Load residents error:", e);

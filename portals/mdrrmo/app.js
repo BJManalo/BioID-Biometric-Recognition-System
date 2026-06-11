@@ -416,6 +416,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             updateStatsAndCharts(reports);
             await plotReportsOnMap(reports);
             await loadResidents(); // Refresh residents count scoped to municipal
+            await fetchBarangayAccounts(); // Load Barangay accounts
         } catch (error) {
             console.error('Fetch reports error:', error);
         }
@@ -741,6 +742,234 @@ document.addEventListener('DOMContentLoaded', async () => {
         } catch (e) {
             console.error("Residents load failed:", e);
         }
+    };
+
+    // 8.1. BARANGAY ACCOUNTS CRUD
+    const brgySelect = document.getElementById('brgySelect');
+    if (brgySelect && assignedJurisdiction && antiqueData[assignedJurisdiction]) {
+        brgySelect.innerHTML = '<option value="" disabled selected>Select Barangay</option>';
+        antiqueData[assignedJurisdiction].sort().forEach(brgy => {
+            const opt = document.createElement('option');
+            opt.value = brgy;
+            opt.textContent = brgy;
+            brgySelect.appendChild(opt);
+        });
+    }
+
+    if (brgySelect) {
+        brgySelect.addEventListener('change', () => {
+            const brgyVal = brgySelect.value;
+            if (!brgyVal) return;
+            
+            const strippedMuni = assignedJurisdiction.replace(/\s+/g, '');
+            const strippedBrgy = brgyVal.replace(/\s+/g, '');
+            
+            const generatedUsername = `${strippedMuni}${strippedBrgy}Rep`;
+            const generatedPassword = `${strippedMuni}${strippedBrgy}123!`;
+            
+            const usernameInput = document.getElementById('brgyUsername');
+            const passwordInput = document.getElementById('brgyPassword');
+            
+            if (usernameInput) usernameInput.value = generatedUsername;
+            if (passwordInput && !document.getElementById('barangayAccountId').value) {
+                passwordInput.value = generatedPassword;
+            }
+        });
+    }
+
+    const toggleBrgyPassword = document.querySelector('.toggle-brgy-password');
+    if (toggleBrgyPassword) {
+        toggleBrgyPassword.addEventListener('click', () => {
+            const targetId = toggleBrgyPassword.getAttribute('data-target');
+            const targetInput = document.getElementById(targetId);
+            if (targetInput) {
+                const isPassword = targetInput.getAttribute('type') === 'password';
+                targetInput.setAttribute('type', isPassword ? 'text' : 'password');
+                toggleBrgyPassword.className = isPassword ? 'bx bx-show toggle-brgy-password' : 'bx bx-hide toggle-brgy-password';
+            }
+        });
+    }
+
+    const fetchBarangayAccounts = async () => {
+        const barangayTableBody = document.getElementById('barangayTableBody');
+        if (!barangayTableBody) return;
+
+        try {
+            const { data: users, error } = await supabase
+                .from('system_users')
+                .select('*')
+                .eq('role', 'BARANGAY');
+
+            if (error) throw error;
+
+            const brgyUsers = users.filter(u => {
+                const parts = (u.assigned_municipality || '').split(':');
+                return parts[0] === assignedJurisdiction;
+            });
+
+            barangayTableBody.innerHTML = '';
+            if (brgyUsers.length === 0) {
+                barangayTableBody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 20px; color: #94A3B8;">No Barangay accounts registered.</td></tr>`;
+                return;
+            }
+
+            brgyUsers.forEach(u => {
+                const parts = (u.assigned_municipality || '').split(':');
+                const brgy = parts[1] || '';
+                const name = `${u.first_name} ${u.last_name}`;
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><div style="font-weight:600; color:#1e293b;">${name}</div></td>
+                    <td>${brgy}</td>
+                    <td>@${u.username}</td>
+                    <td>${u.contact_number || 'N/A'}</td>
+                    <td><code>${u.temp_password || 'N/A'}</code></td>
+                    <td>
+                        <div style="display: flex; gap: 8px; flex-wrap: nowrap; align-items: center; justify-content: center;">
+                            <button class="btn-action btn-edit-brgy" title="Edit" data-id="${u.id}"><i class='bx bx-edit'></i></button>
+                            <button class="btn-action btn-delete-brgy" title="Delete" data-id="${u.id}"><i class='bx bx-trash'></i></button>
+                        </div>
+                    </td>
+                `;
+
+                row.querySelector('.btn-edit-brgy').onclick = () => openBarangayModal(u);
+                row.querySelector('.btn-delete-brgy').onclick = () => deleteBarangayAccount(u.id);
+
+                barangayTableBody.appendChild(row);
+            });
+        } catch (e) {
+            console.error("Fetch barangay accounts error:", e);
+            barangayTableBody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 20px; color: #EF4444;">Failed to load Barangay accounts.</td></tr>`;
+        }
+    };
+
+    window.fetchBarangayAccounts = fetchBarangayAccounts; // Expose globally
+
+    const barangayModal = document.getElementById('barangayModal');
+    const barangayForm = document.getElementById('barangayForm');
+    const openAddBarangayBtn = document.getElementById('openAddBarangayBtn');
+    const closeBarangayBtn = document.getElementById('closeBarangayBtn');
+    const cancelBarangayBtn = document.getElementById('cancelBarangayBtn');
+
+    const openBarangayModal = (account = null) => {
+        if (barangayForm) barangayForm.reset();
+        
+        const idInput = document.getElementById('barangayAccountId');
+        const firstNameInput = document.getElementById('brgyRepFirstName');
+        const lastNameInput = document.getElementById('brgyRepLastName');
+        const brgySelect = document.getElementById('brgySelect');
+        const contactInput = document.getElementById('brgyContact');
+        const usernameInput = document.getElementById('brgyUsername');
+        const passwordInput = document.getElementById('brgyPassword');
+
+        if (account) {
+            document.getElementById('barangayModalTitle').textContent = "Edit Barangay Account";
+            if (idInput) idInput.value = account.id;
+            if (firstNameInput) firstNameInput.value = account.first_name || '';
+            if (lastNameInput) lastNameInput.value = account.last_name || '';
+            if (contactInput) contactInput.value = account.contact_number || '';
+            if (usernameInput) usernameInput.value = account.username || '';
+            if (passwordInput) passwordInput.value = account.temp_password || '';
+
+            const parts = (account.assigned_municipality || '').split(':');
+            const brgy = parts[1] || '';
+            if (brgySelect) brgySelect.value = brgy;
+        } else {
+            document.getElementById('barangayModalTitle').textContent = "Add Barangay Account";
+            if (idInput) idInput.value = '';
+        }
+
+        if (barangayModal) barangayModal.classList.add('show');
+    };
+
+    if (openAddBarangayBtn) openAddBarangayBtn.onclick = () => openBarangayModal(null);
+    if (closeBarangayBtn) closeBarangayBtn.onclick = () => barangayModal.classList.remove('show');
+    if (cancelBarangayBtn) cancelBarangayBtn.onclick = () => barangayModal.classList.remove('show');
+
+    if (barangayForm) {
+        barangayForm.onsubmit = async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('barangayAccountId').value;
+            const firstName = document.getElementById('brgyRepFirstName').value.trim();
+            const lastName = document.getElementById('brgyRepLastName').value.trim();
+            const brgy = document.getElementById('brgySelect').value;
+            const contact = document.getElementById('brgyContact').value.trim();
+            const username = document.getElementById('brgyUsername').value.trim();
+            const password = document.getElementById('brgyPassword').value.trim();
+
+            const accountData = {
+                role: 'BARANGAY',
+                first_name: firstName,
+                last_name: lastName,
+                assigned_municipality: `${assignedJurisdiction}:${brgy}`,
+                contact_number: contact,
+                username: username,
+                temp_password: password
+            };
+
+            const saveBtn = document.getElementById('saveBarangayBtn');
+            if (saveBtn) saveBtn.disabled = true;
+
+            try {
+                if (id) {
+                    const { error } = await supabase
+                        .from('system_users')
+                        .update(accountData)
+                        .eq('id', id);
+                    if (error) throw error;
+                    showCustomAlert("Barangay account updated successfully!", "success", "Account Saved");
+                } else {
+                    const { data: existing, error: checkErr } = await supabase
+                        .from('system_users')
+                        .select('id')
+                        .eq('username', username)
+                        .maybeSingle();
+                    
+                    if (existing) {
+                        showCustomAlert("This username is already taken. Try selecting a different name or suffix.", "warning", "Username Exists");
+                        if (saveBtn) saveBtn.disabled = false;
+                        return;
+                    }
+
+                    const { error } = await supabase
+                        .from('system_users')
+                        .insert([accountData]);
+                    if (error) throw error;
+                    showCustomAlert("Barangay account created successfully!", "success", "Account Created");
+                }
+
+                if (barangayModal) barangayModal.classList.remove('show');
+                await fetchBarangayAccounts();
+            } catch (err) {
+                console.error("Error saving Barangay account:", err);
+                showCustomAlert("Error saving account: " + err.message, "error", "Error");
+            } finally {
+                if (saveBtn) saveBtn.disabled = false;
+            }
+        };
+    }
+
+    const deleteBarangayAccount = async (id) => {
+        showCustomConfirm(
+            "Are you sure you want to delete this Barangay account? They will lose access immediately.",
+            "Delete Barangay Account",
+            async () => {
+                try {
+                    const { error } = await supabase
+                        .from('system_users')
+                        .delete()
+                        .eq('id', id);
+                    if (error) throw error;
+
+                    showCustomAlert("Barangay account deleted successfully.", "success", "Deleted");
+                    await fetchBarangayAccounts();
+                } catch (err) {
+                    console.error("Error deleting Barangay account:", err);
+                    showCustomAlert("Delete failed: " + err.message, "error", "Error");
+                }
+            }
+        );
     };
 
     // 9. WEB SERIAL SCANNER BIOMETRIC INTEGRATION (Always-Listening & Victim Scan)

@@ -33,6 +33,12 @@
                 </a>
             </li>
             <li>
+                <a href="#" data-tab="reports">
+                    <i class='bx bx-car'></i>
+                    <span class="links_name">Accident Reports</span>
+                </a>
+            </li>
+            <li>
                 <div class="sidebar-divider" style="border-top: 1px solid rgba(255, 255, 255, 0.1); margin: 15px 15px; height: 1px;"></div>
             </li>
             <li>
@@ -151,6 +157,35 @@
                                 <tr>
                                     <td colspan="4" style="text-align: center; padding: 30px; color: #94A3B8;">
                                         Loading residents database...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- REPORTS TAB -->
+            <div id="reportsTab" class="tab-content">
+                <div class="box-white">
+                    <div class="title d-flex-between">
+                        <span>Accident Reports Scoped to <span id="brgyAccidentTitleBrgy">...</span></span>
+                    </div>
+                    <div class="table-responsive mt-4">
+                        <table class="reports-table">
+                            <thead>
+                                <tr>
+                                    <th>Date & Time</th>
+                                    <th>Victim Name</th>
+                                    <th>Severity</th>
+                                    <th>Status</th>
+                                    <th>Remarks</th>
+                                </tr>
+                            </thead>
+                            <tbody id="fullReportsTableBody">
+                                <tr>
+                                    <td colspan="5" style="text-align: center; padding: 30px; color: #94A3B8;">
+                                        Loading reports database...
                                     </td>
                                 </tr>
                             </tbody>
