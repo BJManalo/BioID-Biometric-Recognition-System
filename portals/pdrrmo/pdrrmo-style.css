@@ -339,6 +339,15 @@ body {
     color: #fff;
 }
 
+.modern-select:disabled,
+.form-group input:disabled {
+    background: #F8FAFC !important;
+    color: #64748B !important;
+    cursor: not-allowed;
+    border-color: #CBD5E1 !important;
+    opacity: 0.85;
+}
+
 .form-group input:focus,
 .modern-select:focus {
     outline: none;

@@ -358,6 +358,7 @@ document.addEventListener('DOMContentLoaded', () => {
         addPoliceBtn.addEventListener('click', () => {
             if (roleSelect) {
                 roleSelect.value = 'POLICE';
+                roleSelect.disabled = true;
                 generateUserCredentials();
             }
             if (accountFormModal) {
@@ -370,6 +371,7 @@ document.addEventListener('DOMContentLoaded', () => {
         addMdrrmoBtn.addEventListener('click', () => {
             if (roleSelect) {
                 roleSelect.value = 'MDRRMO';
+                roleSelect.disabled = true;
                 generateUserCredentials();
             }
             if (accountFormModal) {
@@ -583,6 +585,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const municipalitySelect = document.getElementById('municipalitySelect');
         const tempPasswordInput = document.getElementById('tempPasswordInput');
 
+        if (roleSelect) {
+            roleSelect.disabled = false;
+        }
         if (officerNameInput) officerNameInput.value = '';
         if (usernameInput) {
             usernameInput.value = '';
@@ -753,6 +758,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Clean up and hide form
+        if (roleSelectElement) {
+            roleSelectElement.disabled = false;
+        }
         if (officerNameInput) officerNameInput.value = '';
         if (usernameInput) {
             usernameInput.value = '';
