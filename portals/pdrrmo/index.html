@@ -200,9 +200,12 @@
             <!-- ACCOUNTS TAB -->
             <div id="accountsTab" class="tab-content" style="display: none;">
                 <!-- Account Creation Button -->
-                <div class="create-account-section box-glass mt-4 d-flex-between align-items-center" style="padding: 20px;">
-                    <span class="title" style="margin: 0; font-size: 1.2rem; font-weight: 600; color: var(--text-color);">Municipal Accounts</span>
-                    <button class="btn btn-primary" id="toggleFormBtn"><i class='bx bx-plus'></i> New Municipal Account</button>
+                <div class="create-account-section box-glass mt-4 d-flex-between align-items-center" style="padding: 20px; gap: 15px; flex-wrap: wrap;">
+                    <span class="title" style="margin: 0; font-size: 1.2rem; font-weight: 600; color: var(--text-color);">Accounts</span>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <button class="btn btn-primary" id="addPoliceBtn"><i class='bx bx-plus'></i> Add Police Account</button>
+                        <button class="btn btn-warning" id="addMdrrmoBtn" style="color: #fff;"><i class='bx bx-plus'></i> Add MDRRMO Account</button>
+                    </div>
                 </div>
 
                 <!-- Unified Accounts Management -->

@@ -347,16 +347,36 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // TOGGLE FORM VISIBILITY
-    const toggleFormBtn = document.getElementById('toggleFormBtn');
+    const addPoliceBtn = document.getElementById('addPoliceBtn');
+    const addMdrrmoBtn = document.getElementById('addMdrrmoBtn');
     const cancelFormBtn = document.getElementById('cancelFormBtn');
     const accountFormModal = document.getElementById('accountFormModal');
     const closeAccountModal = document.getElementById('closeAccountModal');
+    const roleSelect = document.getElementById('roleSelect');
 
-    toggleFormBtn.addEventListener('click', () => {
-        if (accountFormModal) {
-            accountFormModal.style.display = 'flex';
-        }
-    });
+    if (addPoliceBtn) {
+        addPoliceBtn.addEventListener('click', () => {
+            if (roleSelect) {
+                roleSelect.value = 'POLICE';
+                generateUserCredentials();
+            }
+            if (accountFormModal) {
+                accountFormModal.style.display = 'flex';
+            }
+        });
+    }
+
+    if (addMdrrmoBtn) {
+        addMdrrmoBtn.addEventListener('click', () => {
+            if (roleSelect) {
+                roleSelect.value = 'MDRRMO';
+                generateUserCredentials();
+            }
+            if (accountFormModal) {
+                accountFormModal.style.display = 'flex';
+            }
+        });
+    }
     
     if (closeAccountModal) {
         closeAccountModal.addEventListener('click', () => {
