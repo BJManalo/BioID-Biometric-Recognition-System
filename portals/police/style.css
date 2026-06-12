@@ -1189,3 +1189,23 @@ nav {
         transform: translateY(0);
     }
 }
+
+@media (max-width: 768px) {
+    .modal-tabs {
+        overflow-x: auto !important;
+        white-space: nowrap !important;
+        flex-wrap: nowrap !important;
+        -webkit-overflow-scrolling: touch !important;
+        padding-left: 10px !important;
+        padding-right: 10px !important;
+        scrollbar-width: none !important; /* Hide scrollbar for Firefox */
+    }
+    .modal-tabs::-webkit-scrollbar {
+        display: none !important; /* Hide scrollbar for Safari and Chrome */
+    }
+    .m-tab {
+        flex: 0 0 auto !important;
+        padding: 10px 14px !important;
+        font-size: 12.5px !important;
+    }
+}
