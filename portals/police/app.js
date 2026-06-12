@@ -457,15 +457,27 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const fetchAndRenderAll = async () => {
         try {
-            const { data: reports, error } = await supabase
+            // Fetch standard reports
+            const { data: reports, error: reportsError } = await supabase
                 .from('accident_reports')
                 .select('*')
                 .order('datetime', { ascending: false });
 
-            if (error) throw error;
-
+            if (reportsError) throw reportsError;
             renderReports(reports);
             updateStatsAndCharts(reports);
+
+            // Fetch police blotters
+            const { data: blotters, error: blottersError } = await supabase
+                .from('police_blotters')
+                .select('*')
+                .order('datetime_reported', { ascending: false });
+
+            if (blottersError) throw blottersError;
+            if (typeof renderBlotters === 'function') {
+                renderBlotters(blotters);
+            }
+
             await loadResidents(); // Refresh residents count too
         } catch (error) {
             console.error('Fetch reports error:', error);
@@ -1263,6 +1275,33 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
             }
 
+            // Check if Blotter Modal is open!
+            const blotterModal = document.getElementById('blotterModal');
+            if (blotterModal && blotterModal.classList.contains('show')) {
+                document.getElementById('vicFirstName').value = person.first_name || '';
+                document.getElementById('vicLastName').value = person.last_name || '';
+                document.getElementById('vicMiddleName').value = person.middle_name || '';
+                document.getElementById('vicContact').value = person.contact_number || '';
+                document.getElementById('vicAddress').value = `${person.barangay || ''}, ${person.municipality || ''}`;
+                document.getElementById('vicBloodType').value = person.blood_type || '';
+                document.getElementById('vicMedical').value = person.medical_info || '';
+                
+                let emContact = person.emergency_contact || '';
+                let emName = emContact;
+                if (emContact.includes(' (')) {
+                    emName = emContact.split(' (')[0];
+                }
+                document.getElementById('vicEmergencyName').value = emName;
+                document.getElementById('vicEmergencyPhone').value = person.emergency_phone || '';
+                
+                // Switch UI to verified state
+                document.getElementById('blotterScannerInitialState').style.display = 'none';
+                document.getElementById('blotterVerifiedState').style.display = 'flex';
+                
+                showCustomAlert(`Victim identity verified: ${person.first_name} ${person.last_name}`, "success", "Identity Verified");
+                return;
+            }
+
             // Ensure the Report Modal is open
             if (!reportModal.classList.contains('show')) {
                 openReportModal();
@@ -1551,6 +1590,1008 @@ document.addEventListener('DOMContentLoaded', async () => {
             console.error("Load residents failed", e);
         }
     };
+
+    // --- POLICE BLOTTER MANAGEMENT ---
+    
+    // Parse Blotter details from the serialized string
+    function parseBlotterData(involvedText) {
+        if (!involvedText || !involvedText.includes('=== PNP INCIDENT RECORD BLOTTER ===')) {
+            return null;
+        }
+        
+        const data = {};
+        const lines = involvedText.split('\n');
+        
+        const getValue = (prefix) => {
+            const line = lines.find(l => l.startsWith(prefix));
+            return line ? line.substring(prefix.length).trim() : '';
+        };
+
+        data.entryNo = getValue('ENTRY NUMBER:');
+        data.incidentType = getValue('INCIDENT TYPE:');
+        data.datetimeOccurrence = getValue('DATE/TIME OF OCCURRENCE:');
+        data.street = getValue('PLACE OF OCCURRENCE:');
+        
+        data.repFirstName = getValue('Complainant First Name:');
+        data.repLastName = getValue('Complainant Last Name:');
+        data.repMiddleName = getValue('Complainant Middle Name:');
+        data.repNickname = getValue('Complainant Nickname:');
+        data.repAge = getValue('Complainant Age:');
+        data.repGender = getValue('Complainant Gender:');
+        data.repCivilStatus = getValue('Complainant Civil Status:');
+        data.repCitizenship = getValue('Complainant Citizenship:');
+        data.repContact = getValue('Complainant Contact:');
+        data.repEmail = getValue('Complainant Email:');
+        data.repAddress = getValue('Complainant Address:');
+        data.repOccupation = getValue('Complainant Occupation:');
+        data.repEducation = getValue('Complainant Education:');
+
+        data.susFirstName = getValue('Suspect First Name:');
+        data.susLastName = getValue('Suspect Last Name:');
+        data.susMiddleName = getValue('Suspect Middle Name:');
+        data.susNickname = getValue('Suspect Nickname:');
+        data.susAge = getValue('Suspect Age:');
+        data.susGender = getValue('Suspect Gender:');
+        data.susInfluence = getValue('Suspect Influence:');
+        data.susAddress = getValue('Suspect Address:');
+        data.susPhysical = getValue('Suspect Physical:');
+        data.susMarks = getValue('Suspect Marks:');
+
+        data.vicFirstName = getValue('Victim First Name:');
+        data.vicLastName = getValue('Victim Last Name:');
+        data.vicMiddleName = getValue('Victim Middle Name:');
+        data.vicNickname = getValue('Victim Nickname:');
+        data.vicAge = getValue('Victim Age:');
+        data.vicGender = getValue('Victim Gender:');
+        data.vicContact = getValue('Victim Contact:');
+        data.vicAddress = getValue('Victim Address:');
+        data.vicBloodType = getValue('Victim Blood Type:');
+        data.vicMedical = getValue('Victim Medical:');
+        data.vicEmergencyName = getValue('Victim Emergency Name:');
+        data.vicEmergencyPhone = getValue('Victim Emergency Phone:');
+        
+        const narrativeIdx = lines.findIndex(l => l.includes('--- ITEM D: NARRATIVE OF THE INCIDENT ---'));
+        if (narrativeIdx !== -1) {
+            data.narrative = lines.slice(narrativeIdx + 1).join('\n').trim();
+        } else {
+            data.narrative = '';
+        }
+
+        return data;
+    }
+
+    // Serialize form fields to a backward-compatible string
+    function serializeBlotterData(data) {
+        let text = `Name: ${data.vicFirstName} ${data.vicLastName}\n`;
+        text += `Blood Type: ${data.vicBloodType || 'Unknown'}\n`;
+        text += `Medical: ${data.vicMedical || 'None'}\n`;
+        text += `Emergency: ${data.vicEmergencyName || 'None'} (${data.vicEmergencyPhone || 'N/A'})\n\n`;
+        
+        text += `=== PNP INCIDENT RECORD BLOTTER ===\n`;
+        text += `ENTRY NUMBER: ${data.entryNo}\n`;
+        text += `INCIDENT TYPE: ${data.incidentType}\n`;
+        text += `DATE/TIME OF OCCURRENCE: ${data.datetimeOccurrence}\n`;
+        text += `PLACE OF OCCURRENCE: ${data.street}\n\n`;
+
+        text += `Complainant First Name: ${data.repFirstName}\n`;
+        text += `Complainant Last Name: ${data.repLastName}\n`;
+        text += `Complainant Middle Name: ${data.repMiddleName || ''}\n`;
+        text += `Complainant Nickname: ${data.repNickname || ''}\n`;
+        text += `Complainant Age: ${data.repAge}\n`;
+        text += `Complainant Gender: ${data.repGender}\n`;
+        text += `Complainant Civil Status: ${data.repCivilStatus || ''}\n`;
+        text += `Complainant Citizenship: ${data.repCitizenship || 'Filipino'}\n`;
+        text += `Complainant Contact: ${data.repContact || ''}\n`;
+        text += `Complainant Email: ${data.repEmail || ''}\n`;
+        text += `Complainant Address: ${data.repAddress}\n`;
+        text += `Complainant Occupation: ${data.repOccupation || ''}\n`;
+        text += `Complainant Education: ${data.repEducation || ''}\n\n`;
+
+        text += `Suspect First Name: ${data.susFirstName || ''}\n`;
+        text += `Suspect Last Name: ${data.susLastName || ''}\n`;
+        text += `Suspect Middle Name: ${data.susMiddleName || ''}\n`;
+        text += `Suspect Nickname: ${data.susNickname || ''}\n`;
+        text += `Suspect Age: ${data.susAge || ''}\n`;
+        text += `Suspect Gender: ${data.susGender || ''}\n`;
+        text += `Suspect Influence: ${data.susInfluence || 'Neither'}\n`;
+        text += `Suspect Address: ${data.susAddress || ''}\n`;
+        text += `Suspect Physical: ${data.susPhysical || ''}\n`;
+        text += `Suspect Marks: ${data.susMarks || ''}\n\n`;
+
+        text += `Victim First Name: ${data.vicFirstName}\n`;
+        text += `Victim Last Name: ${data.vicLastName}\n`;
+        text += `Victim Middle Name: ${data.vicMiddleName || ''}\n`;
+        text += `Victim Nickname: ${data.vicNickname || ''}\n`;
+        text += `Victim Age: ${data.vicAge}\n`;
+        text += `Victim Gender: ${data.vicGender}\n`;
+        text += `Victim Contact: ${data.vicContact || ''}\n`;
+        text += `Victim Address: ${data.vicAddress}\n`;
+        text += `Victim Blood Type: ${data.vicBloodType || 'Unknown'}\n`;
+        text += `Victim Medical: ${data.vicMedical || 'None'}\n`;
+        text += `Victim Emergency Name: ${data.vicEmergencyName || ''}\n`;
+        text += `Victim Emergency Phone: ${data.vicEmergencyPhone || ''}\n\n`;
+
+        text += `--- ITEM D: NARRATIVE OF THE INCIDENT ---\n`;
+        text += `${data.narrative}\n`;
+        
+        return text;
+    }
+
+    // Generate entry number BL-YYYYMMDD-XXXX
+    async function generateNextEntryNo() {
+        const todayStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+        try {
+            const { data, error } = await supabase
+                .from('police_blotters')
+                .select('entry_no')
+                .like('entry_no', `BL-${todayStr}-%`);
+            
+            if (error) throw error;
+            
+            let maxSeq = 0;
+            data.forEach(r => {
+                const match = r.entry_no.match(/BL-(\d{8})-(\d{4})/);
+                if (match && match[1] === todayStr) {
+                    const seq = parseInt(match[2], 10);
+                    if (seq > maxSeq) {
+                        maxSeq = seq;
+                    }
+                }
+            });
+            
+            const nextSeqStr = String(maxSeq + 1).padStart(4, '0');
+            return `BL-${todayStr}-${nextSeqStr}`;
+        } catch (e) {
+            console.error("Failed to generate entry no:", e);
+            const randomSeq = Math.floor(1000 + Math.random() * 9000);
+            return `BL-${todayStr}-${randomSeq}`;
+        }
+    }
+
+    const saveBlotterBtn = document.getElementById('saveBlotterBtn');
+    
+    function updateBlotterBtnText() {
+        if (!saveBlotterBtn) return;
+        const activeTab = document.querySelector('.m-tab.active');
+        if (!activeTab) return;
+        const activeTabId = activeTab.getAttribute('data-m-tab');
+        
+        if (activeTabId === 'victim-info') {
+            saveBlotterBtn.textContent = 'Save Blotter';
+            saveBlotterBtn.type = 'submit';
+        } else {
+            saveBlotterBtn.textContent = 'Next';
+            saveBlotterBtn.type = 'button';
+        }
+    }
+
+    // Modal Tab Navigation
+    const modalTabs = document.querySelectorAll('.m-tab');
+    modalTabs.forEach(tab => {
+        tab.addEventListener('click', (e) => {
+            const tabsOrder = ['incident-info', 'reporting-info', 'suspect-info', 'victim-info'];
+            const activeTab = document.querySelector('.m-tab.active');
+            if (activeTab && activeTab !== tab) {
+                const activeTabId = activeTab.getAttribute('data-m-tab');
+                const targetTabId = tab.getAttribute('data-m-tab');
+                
+                const currentIndex = tabsOrder.indexOf(activeTabId);
+                const targetIndex = tabsOrder.indexOf(targetTabId);
+                
+                if (targetIndex > currentIndex) {
+                    // Validate all tabs between current index and target index - 1
+                    for (let i = currentIndex; i < targetIndex; i++) {
+                        const checkTabId = tabsOrder[i];
+                        const checkTabContent = document.getElementById(`m-tab-${checkTabId}`);
+                        if (checkTabContent) {
+                            const inputs = checkTabContent.querySelectorAll('input, select, textarea');
+                            for (let input of inputs) {
+                                if (!input.checkValidity()) {
+                                    // Highlight the tab that has error
+                                    const errorTabBtn = document.querySelector(`.m-tab[data-m-tab="${checkTabId}"]`);
+                                    if (errorTabBtn && errorTabBtn !== activeTab) {
+                                        modalTabs.forEach(t => t.classList.remove('active'));
+                                        errorTabBtn.classList.add('active');
+                                        document.querySelectorAll('.m-tab-content').forEach(c => c.classList.remove('active'));
+                                        document.getElementById(`m-tab-${checkTabId}`).classList.add('active');
+                                    }
+                                    input.reportValidity();
+                                    e.stopImmediatePropagation();
+                                    updateBlotterBtnText();
+                                    return;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            modalTabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            
+            const target = tab.getAttribute('data-m-tab');
+            document.querySelectorAll('.m-tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(`m-tab-${target}`).classList.add('active');
+            updateBlotterBtnText();
+        });
+    });
+
+    // Populate Barangay Dropdown in Blotter Modal
+    const blotterBrgySelect = document.getElementById('blotterBrgy');
+    if (blotterBrgySelect && antiqueData[assignedJurisdiction]) {
+        blotterBrgySelect.innerHTML = '<option value="" disabled selected>Select Barangay</option>';
+        antiqueData[assignedJurisdiction].sort().forEach(brgy => {
+            const opt = document.createElement('option');
+            opt.value = brgy;
+            opt.textContent = brgy;
+            blotterBrgySelect.appendChild(opt);
+        });
+    }    // Map police_blotters table row to camelCase blotterData object
+    function mapRowToBlotterData(row) {
+        if (!row) return null;
+        return {
+            entryNo: row.entry_no || '',
+            incidentType: row.incident_type || '',
+            datetimeOccurrence: row.datetime_occurrence || '',
+            street: row.street || '',
+            
+            repFirstName: row.rep_first_name || '',
+            repLastName: row.rep_last_name || '',
+            repMiddleName: row.rep_middle_name || '',
+            repNickname: row.rep_nickname || '',
+            repAge: row.rep_age || '',
+            repGender: row.rep_gender || '',
+            repCivilStatus: row.rep_civil_status || '',
+            repCitizenship: row.rep_citizenship || '',
+            repContact: row.rep_contact || '',
+            repEmail: row.rep_email || '',
+            repAddress: row.rep_address || '',
+            repOccupation: row.rep_occupation || '',
+            repEducation: row.rep_education || '',
+            
+            susFirstName: row.sus_first_name || '',
+            susLastName: row.sus_last_name || '',
+            susMiddleName: row.sus_middle_name || '',
+            susNickname: row.sus_nickname || '',
+            susAge: row.sus_age || '',
+            susGender: row.sus_gender || '',
+            susInfluence: row.sus_influence || '',
+            susAddress: row.sus_address || '',
+            susPhysical: row.sus_physical || '',
+            susMarks: row.sus_marks || '',
+            
+            vicFirstName: row.vic_first_name || '',
+            vicLastName: row.vic_last_name || '',
+            vicMiddleName: row.vic_middle_name || '',
+            vicNickname: row.vic_nickname || '',
+            vicAge: row.vic_age || '',
+            vicGender: row.vic_gender || '',
+            vicContact: row.vic_contact || '',
+            vicAddress: row.vic_address || '',
+            vicBloodType: row.vic_blood_type || '',
+            vicMedical: row.vic_medical || '',
+            vicEmergencyName: row.vic_emergency_name || '',
+            vicEmergencyPhone: row.vic_emergency_phone || '',
+            
+            narrative: row.narrative || ''
+        };
+    }
+
+    // Open Blotter Entry Modal
+    const openBlotterModal = async (report = null) => {
+        const form = document.getElementById('blotterForm');
+        form.reset();
+        
+        // Reset modal tabs to first tab
+        modalTabs.forEach(t => t.classList.remove('active'));
+        document.querySelector('.m-tab[data-m-tab="incident-info"]').classList.add('active');
+        document.querySelectorAll('.m-tab-content').forEach(c => c.classList.remove('active'));
+        document.getElementById('m-tab-incident-info').classList.add('active');
+        updateBlotterBtnText();
+        
+        
+        
+        if (report) {
+            document.getElementById('blotterModalTitle').textContent = "Blotter Entry Details";
+            document.getElementById('blotterId').value = report.id;
+            
+            const data = mapRowToBlotterData(report);
+            if (data) {
+                document.getElementById('blotterEntryNo').value = data.entryNo || '';
+                const loadedIncidentType = data.incidentType || 'Vehicular Accident';
+                const selectEl = document.getElementById('blotterIncidentType');
+                const otherInput = document.getElementById('blotterIncidentTypeOther');
+                const standardOptions = ['Vehicular Accident', 'Physical Injury', 'Reckless Imprudence'];
+                
+                if (standardOptions.includes(loadedIncidentType)) {
+                    selectEl.value = loadedIncidentType;
+                    if (otherInput) {
+                        otherInput.style.display = 'none';
+                        otherInput.value = '';
+                        otherInput.required = false;
+                    }
+                } else {
+                    selectEl.value = 'Other';
+                    if (otherInput) {
+                        otherInput.style.display = 'block';
+                        otherInput.value = loadedIncidentType;
+                        otherInput.required = true;
+                    }
+                }
+                
+                const d = new Date(report.datetime_reported || report.datetime);
+                const formattedDate = d.getFullYear() + '-' +
+                    String(d.getMonth() + 1).padStart(2, '0') + '-' +
+                    String(d.getDate()).padStart(2, '0') + 'T' +
+                    String(d.getHours()).padStart(2, '0') + ':' +
+                    String(d.getMinutes()).padStart(2, '0');
+                document.getElementById('blotterDateTimeReported').value = formattedDate;
+
+                let formattedOcc = '';
+                if (data.datetimeOccurrence) {
+                    const dOcc = new Date(data.datetimeOccurrence);
+                    formattedOcc = dOcc.getFullYear() + '-' +
+                        String(dOcc.getMonth() + 1).padStart(2, '0') + '-' +
+                        String(dOcc.getDate()).padStart(2, '0') + 'T' +
+                        String(dOcc.getHours()).padStart(2, '0') + ':' +
+                        String(dOcc.getMinutes()).padStart(2, '0');
+                }
+                document.getElementById('blotterDateTimeOccurrence').value = formattedOcc;
+                document.getElementById('blotterBrgy').value = report.location || '';
+                document.getElementById('blotterStreet').value = data.street || '';
+                document.getElementById('blotterSeverity').value = report.severity || 'Minor';
+                document.getElementById('blotterStatus').value = report.status || 'Reported';
+                
+                document.getElementById('repFirstName').value = data.repFirstName || '';
+                document.getElementById('repLastName').value = data.repLastName || '';
+                document.getElementById('repMiddleName').value = data.repMiddleName || '';
+                document.getElementById('repNickname').value = data.repNickname || '';
+                document.getElementById('repAge').value = data.repAge || '';
+                document.getElementById('repGender').value = data.repGender || '';
+                document.getElementById('repCivilStatus').value = data.repCivilStatus || 'Single';
+                document.getElementById('repCitizenship').value = data.repCitizenship || 'Filipino';
+                document.getElementById('repContact').value = data.repContact || '';
+                document.getElementById('repEmail').value = data.repEmail || '';
+                document.getElementById('repAddress').value = data.repAddress || '';
+                document.getElementById('repOccupation').value = data.repOccupation || '';
+                document.getElementById('repEducation').value = data.repEducation || '';
+                
+                document.getElementById('susFirstName').value = data.susFirstName || '';
+                document.getElementById('susLastName').value = data.susLastName || '';
+                document.getElementById('susMiddleName').value = data.susMiddleName || '';
+                document.getElementById('susNickname').value = data.susNickname || '';
+                document.getElementById('susAge').value = data.susAge || '';
+                document.getElementById('susGender').value = data.susGender || '';
+                document.getElementById('susInfluence').value = data.susInfluence || 'Neither';
+                document.getElementById('susAddress').value = data.susAddress || '';
+                document.getElementById('susPhysical').value = data.susPhysical || '';
+                document.getElementById('susMarks').value = data.susMarks || '';
+                
+                document.getElementById('vicFirstName').value = data.vicFirstName || '';
+                document.getElementById('vicLastName').value = data.vicLastName || '';
+                document.getElementById('vicMiddleName').value = data.vicMiddleName || '';
+                document.getElementById('vicNickname').value = data.vicNickname || '';
+                document.getElementById('vicAge').value = data.vicAge || '';
+                document.getElementById('vicGender').value = data.vicGender || '';
+                document.getElementById('vicContact').value = data.vicContact || '';
+                document.getElementById('vicAddress').value = data.vicAddress || '';
+                document.getElementById('vicBloodType').value = data.vicBloodType || '';
+                document.getElementById('vicMedical').value = data.vicMedical || '';
+                document.getElementById('vicEmergencyName').value = data.vicEmergencyName || '';
+                document.getElementById('vicEmergencyPhone').value = data.vicEmergencyPhone || '';
+                
+                document.getElementById('blotterNarrative').value = data.narrative || '';
+                document.getElementById('blotterOfficer').value = report.reporting_officer || officerName;
+                
+                if (data.vicBloodType || data.vicEmergencyName) {
+                    document.getElementById('blotterScannerInitialState').style.display = 'none';
+                    document.getElementById('blotterVerifiedState').style.display = 'flex';
+                } else {
+                    document.getElementById('blotterScannerInitialState').style.display = 'block';
+                    document.getElementById('blotterVerifiedState').style.display = 'none';
+                }
+            }
+            
+
+        } else {
+            document.getElementById('blotterModalTitle').textContent = "New Incident Blotter Entry";
+            document.getElementById('blotterId').value = '';
+            document.getElementById('blotterEntryNo').value = await generateNextEntryNo();
+            document.getElementById('blotterDateTimeReported').value = new Date().toISOString().substring(0, 16);
+            document.getElementById('blotterDateTimeOccurrence').value = '';
+            document.getElementById('blotterOfficer').value = officerName;
+            
+            document.getElementById('blotterIncidentType').value = 'Vehicular Accident';
+            const otherInput = document.getElementById('blotterIncidentTypeOther');
+            if (otherInput) {
+                otherInput.style.display = 'none';
+                otherInput.value = '';
+                otherInput.required = false;
+            }
+            
+            document.getElementById('blotterScannerInitialState').style.display = 'block';
+            document.getElementById('blotterVerifiedState').style.display = 'none';
+        }
+        document.getElementById('blotterModal').classList.add('show');
+    };
+
+    // Close and Cancel buttons
+    const openAddBlotterBtn = document.getElementById('openAddBlotterBtn');
+    const closeBlotterBtn = document.getElementById('closeBlotterBtn');
+    const cancelBlotterBtn = document.getElementById('cancelBlotterBtn');
+    const blotterModal = document.getElementById('blotterModal');
+    const blotterForm = document.getElementById('blotterForm');
+
+    if (openAddBlotterBtn) openAddBlotterBtn.onclick = () => openBlotterModal();
+    if (closeBlotterBtn) closeBlotterBtn.onclick = () => blotterModal.classList.remove('show');
+    if (cancelBlotterBtn) cancelBlotterBtn.onclick = () => blotterModal.classList.remove('show');
+
+    // Handle "Next" click wizard functionality
+    if (saveBlotterBtn) {
+        saveBlotterBtn.addEventListener('click', (e) => {
+            if (saveBlotterBtn.type === 'button') {
+                e.preventDefault();
+                const activeTab = document.querySelector('.m-tab.active');
+                if (!activeTab) return;
+                const activeTabId = activeTab.getAttribute('data-m-tab');
+                
+                const tabsOrder = ['incident-info', 'reporting-info', 'suspect-info', 'victim-info'];
+                const currentIndex = tabsOrder.indexOf(activeTabId);
+                if (currentIndex !== -1 && currentIndex < tabsOrder.length - 1) {
+                    const nextTabId = tabsOrder[currentIndex + 1];
+                    const nextTabButton = document.querySelector(`.m-tab[data-m-tab="${nextTabId}"]`);
+                    if (nextTabButton) {
+                        nextTabButton.click();
+                    }
+                }
+            }
+        });
+    }
+
+    // Toggle custom specify input when "Other" is selected in Incident Type
+    const blotterIncidentTypeSelect = document.getElementById('blotterIncidentType');
+    const blotterIncidentTypeOtherInput = document.getElementById('blotterIncidentTypeOther');
+    if (blotterIncidentTypeSelect && blotterIncidentTypeOtherInput) {
+        blotterIncidentTypeSelect.addEventListener('change', () => {
+            if (blotterIncidentTypeSelect.value === 'Other') {
+                blotterIncidentTypeOtherInput.style.display = 'block';
+                blotterIncidentTypeOtherInput.required = true;
+                blotterIncidentTypeOtherInput.focus();
+            } else {
+                blotterIncidentTypeOtherInput.style.display = 'none';
+                blotterIncidentTypeOtherInput.required = false;
+                blotterIncidentTypeOtherInput.value = '';
+            }
+        });
+    }
+
+    // Blotter Victim Biometric Scan UI listeners
+    const blotterScanVictimBtn = document.getElementById('blotterScanVictimBtn');
+    if (blotterScanVictimBtn) {
+        blotterScanVictimBtn.onclick = async () => {
+            if (!scannerActive) {
+                showCustomAlert("Scanner is not connected! Connect it at the top of the screen.", "error", "Offline");
+            } else {
+                showCustomAlert("Dashboard is listening! Just place the victim's finger on the hardware.", "info", "Scanner Active");
+            }
+        };
+    }
+
+    const blotterClearScanBtn = document.getElementById('blotterClearScanBtn');
+    if (blotterClearScanBtn) {
+        blotterClearScanBtn.onclick = () => {
+            document.getElementById('vicFirstName').value = '';
+            document.getElementById('vicLastName').value = '';
+            document.getElementById('vicMiddleName').value = '';
+            document.getElementById('vicNickname').value = '';
+            document.getElementById('vicAge').value = '';
+            document.getElementById('vicGender').value = '';
+            document.getElementById('vicContact').value = '';
+            document.getElementById('vicAddress').value = '';
+            document.getElementById('vicBloodType').value = '';
+            document.getElementById('vicMedical').value = '';
+            document.getElementById('vicEmergencyName').value = '';
+            document.getElementById('vicEmergencyPhone').value = '';
+            
+            document.getElementById('blotterScannerInitialState').style.display = 'block';
+            document.getElementById('blotterVerifiedState').style.display = 'none';
+        };
+    }
+
+    // Submit Blotter Form
+    if (blotterForm) {
+        blotterForm.onsubmit = async (e) => {
+            e.preventDefault();
+            
+            const id = document.getElementById('blotterId').value;
+            let entryNoVal = document.getElementById('blotterEntryNo').value;
+            if (!entryNoVal) {
+                entryNoVal = await generateNextEntryNo();
+            }
+            
+            const selectVal = document.getElementById('blotterIncidentType').value;
+            const customVal = document.getElementById('blotterIncidentTypeOther') ? document.getElementById('blotterIncidentTypeOther').value.trim() : '';
+            const finalIncidentType = (selectVal === 'Other' && customVal) ? customVal : selectVal;
+
+            const dbData = {
+                entry_no: entryNoVal,
+                incident_type: finalIncidentType,
+                datetime_reported: document.getElementById('blotterDateTimeReported').value,
+                datetime_occurrence: document.getElementById('blotterDateTimeOccurrence').value || null,
+                municipality: assignedJurisdiction,
+                location: document.getElementById('blotterBrgy').value,
+                street: document.getElementById('blotterStreet').value.trim(),
+                severity: document.getElementById('blotterSeverity').value,
+                status: document.getElementById('blotterStatus').value,
+                reporting_officer: document.getElementById('blotterOfficer').value || officerName,
+                
+                rep_first_name: document.getElementById('repFirstName').value.trim(),
+                rep_last_name: document.getElementById('repLastName').value.trim(),
+                rep_middle_name: document.getElementById('repMiddleName').value.trim(),
+                rep_nickname: document.getElementById('repNickname').value.trim(),
+                rep_age: parseInt(document.getElementById('repAge').value) || null,
+                rep_gender: document.getElementById('repGender').value,
+                rep_civil_status: document.getElementById('repCivilStatus').value,
+                rep_citizenship: document.getElementById('repCitizenship').value.trim(),
+                rep_contact: document.getElementById('repContact').value.trim(),
+                rep_email: document.getElementById('repEmail').value.trim(),
+                rep_address: document.getElementById('repAddress').value.trim(),
+                rep_occupation: document.getElementById('repOccupation').value.trim(),
+                rep_education: document.getElementById('repEducation').value.trim(),
+                
+                sus_first_name: document.getElementById('susFirstName').value.trim(),
+                sus_last_name: document.getElementById('susLastName').value.trim(),
+                sus_middle_name: document.getElementById('susMiddleName').value.trim(),
+                sus_nickname: document.getElementById('susNickname').value.trim(),
+                sus_age: parseInt(document.getElementById('susAge').value) || null,
+                sus_gender: document.getElementById('susGender').value,
+                sus_influence: document.getElementById('susInfluence').value,
+                sus_address: document.getElementById('susAddress').value.trim(),
+                sus_physical: document.getElementById('susPhysical').value.trim(),
+                sus_marks: document.getElementById('susMarks').value.trim(),
+                
+                vic_first_name: document.getElementById('vicFirstName').value.trim(),
+                vic_last_name: document.getElementById('vicLastName').value.trim(),
+                vic_middle_name: document.getElementById('vicMiddleName').value.trim(),
+                vic_nickname: document.getElementById('vicNickname').value.trim(),
+                vic_age: parseInt(document.getElementById('vicAge').value) || null,
+                vic_gender: document.getElementById('vicGender').value,
+                vic_contact: document.getElementById('vicContact').value.trim(),
+                vic_address: document.getElementById('vicAddress').value.trim(),
+                vic_blood_type: document.getElementById('vicBloodType').value.trim(),
+                vic_medical: document.getElementById('vicMedical').value.trim(),
+                vic_emergency_name: document.getElementById('vicEmergencyName').value.trim(),
+                vic_emergency_phone: document.getElementById('vicEmergencyPhone').value.trim(),
+                
+                narrative: document.getElementById('blotterNarrative').value.trim()
+            };
+            
+            try {
+                if (id) {
+                    const { error } = await supabase
+                        .from('police_blotters')
+                        .update(dbData)
+                        .eq('id', id);
+                    if (error) throw error;
+                } else {
+                    const { error } = await supabase
+                        .from('police_blotters')
+                        .insert([dbData]);
+                    if (error) throw error;
+                }
+                
+                showCustomAlert("Blotter saved successfully!", "success", "Saved");
+                blotterModal.classList.remove('show');
+                await fetchAndRenderAll();
+            } catch (err) {
+                console.error("Save blotter error:", err);
+                showCustomAlert("Error saving blotter: " + err.message, "error", "Save Failed");
+            }
+        };
+    }
+
+    // Render Blotter list
+    window.renderBlotters = (blotters) => {
+        const tableBody = document.getElementById('blotterTableBody');
+        if (!tableBody) return;
+        
+        // Filters
+        const q = document.getElementById('searchBlotter').value.toLowerCase().trim();
+        const typeFilter = document.getElementById('filterBlotterType').value;
+        const statusFilter = document.getElementById('filterBlotterStatus').value;
+        
+        const filteredBlotters = blotters.filter(b => {
+            if (typeFilter && b.incident_type !== typeFilter) return false;
+            if (statusFilter && b.status !== statusFilter) return false;
+            
+            if (q) {
+                const complainantName = `${b.rep_first_name} ${b.rep_last_name}`.toLowerCase();
+                const victimName = `${b.vic_first_name} ${b.vic_last_name}`.toLowerCase();
+                const suspectName = `${b.sus_first_name} ${b.sus_last_name}`.toLowerCase();
+                const entryNo = b.entry_no.toLowerCase();
+                
+                if (!complainantName.includes(q) && 
+                    !victimName.includes(q) && 
+                    !suspectName.includes(q) && 
+                    !entryNo.includes(q)) {
+                    return false;
+                }
+            }
+            return true;
+        });
+        
+        // Update Blotter Overview statistics
+        document.getElementById('blotter-stats-total').textContent = filteredBlotters.length;
+        document.getElementById('blotter-stats-pending').textContent = filteredBlotters.filter(b => b.status === 'Under Investigation').length;
+        document.getElementById('blotter-stats-resolved').textContent = filteredBlotters.filter(b => b.status === 'Resolved').length;
+
+        tableBody.innerHTML = '';
+        
+        if (filteredBlotters.length === 0) {
+            tableBody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 30px; color: #94A3B8;">No blotter entries found.</td></tr>`;
+            return;
+        }
+        
+        filteredBlotters.forEach(b => {
+            const data = mapRowToBlotterData(b);
+            if (!data) return;
+            
+            const row = document.createElement('tr');
+            const dateStr = new Date(b.datetime_reported).toLocaleDateString() + ' ' + new Date(b.datetime_reported).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const compName = `${data.repFirstName} ${data.repLastName}`;
+            const vicName = `${data.vicFirstName} ${data.vicLastName}`;
+            const susName = (data.susFirstName && data.susLastName) ? `${data.susFirstName} ${data.susLastName}` : 'Unknown';
+            
+            let badgeClass = 'badge-pending';
+            if (b.status === 'Resolved') badgeClass = 'badge-resolved';
+            else if (b.status === 'Reported') badgeClass = 'badge-critical';
+            
+            row.innerHTML = `
+                <td><b style="color: #103155;">${data.entryNo}</b></td>
+                <td>${dateStr}</td>
+                <td><span style="font-weight: 500; font-size: 13px; color: #2C74B3;"><i class='bx bx-info-circle'></i> ${data.incidentType}</span></td>
+                <td>${compName}</td>
+                <td><div style="font-weight: 600; color: #1E293B;">${vicName}</div></td>
+                <td>${susName}</td>
+                <td><span class="badge ${badgeClass}">${b.status}</span></td>
+                <td>
+                    <div style="display: flex; gap: 8px; justify-content: center; align-items: center; flex-wrap: nowrap;">
+                        <button class="btn-action btn-edit btn-view-blotter" title="View / Edit details"><i class='bx bx-edit'></i></button>
+                        <button class="btn-action btn-print btn-print-blotter" title="Print Form (PNP IRF)"><i class='bx bx-printer'></i></button>
+                        <button class="btn-action btn-delete btn-delete-blotter" title="Delete record"><i class='bx bx-trash'></i></button>
+                    </div>
+                </td>
+            `;
+            
+            row.querySelector('.btn-view-blotter').onclick = () => openBlotterModal(b);
+            row.querySelector('.btn-print-blotter').onclick = () => printBlotterForm(b);
+            row.querySelector('.btn-delete-blotter').onclick = () => deleteBlotter(b.id);
+            
+            tableBody.appendChild(row);
+        });
+    };
+
+    // Delete Blotter
+    const deleteBlotter = async (id) => {
+        showCustomConfirm(
+            "Are you sure you want to permanently delete this blotter entry? This action cannot be undone.",
+            "Delete Blotter Record",
+            async () => {
+                try {
+                    const { error } = await supabase
+                        .from('police_blotters')
+                        .delete()
+                        .eq('id', id);
+                    if (error) throw error;
+                    showCustomAlert("Blotter record deleted successfully.", "success", "Deleted");
+                    await fetchAndRenderAll();
+                } catch (err) {
+                    console.error(err);
+                    showCustomAlert("Delete failed: " + err.message, "error", "Error");
+                }
+            }
+        );
+    };
+
+    // Print Blotter Form in a new window
+    function printBlotterForm(report) {
+        const data = mapRowToBlotterData(report);
+        if (!data) return;
+        
+        const printWindow = window.open('', '_blank', 'width=900,height=1200');
+        if (!printWindow) {
+            showCustomAlert("Pop-up blocked! Please allow pop-ups for this application to print.", "warning", "Printer Blocked");
+            return;
+        }
+        
+        const html = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>PNP Incident Record Form - ${data.entryNo}</title>
+            <style>
+                @page {
+                    size: auto;
+                    margin: 0;
+                }
+                @media print {
+                    body { margin: 1.5cm; padding: 0; font-family: Arial, sans-serif; font-size: 11px; }
+                    .no-print { display: none; }
+                }
+                body { font-family: Arial, sans-serif; font-size: 11px; color: #000; padding: 20px; line-height: 1.3; }
+                .header-table { width: 100%; border-collapse: collapse; text-align: center; margin-bottom: 15px; }
+                .header-table td { border: none; padding: 2px; }
+                .title { font-size: 14px; font-weight: bold; text-transform: uppercase; margin: 10px 0; border-bottom: 2px solid #000; padding-bottom: 5px; display: inline-block; }
+                
+                .form-table { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
+                .form-table td { border: 1px solid #000; padding: 6px; vertical-align: top; }
+                .section-header { background: #E2E8F0; font-weight: bold; font-size: 11px; padding: 6px 8px !important; text-transform: uppercase; border: 1px solid #000; border-bottom: none; margin-top: 15px; }
+                
+                .label { font-weight: bold; font-size: 9px; color: #333; display: block; text-transform: uppercase; margin-bottom: 2px; }
+                .value { font-size: 11px; font-weight: normal; color: #000; min-height: 14px; display: block; }
+                
+                .narrative-box { border: 1px solid #000; padding: 12px; min-height: 250px; font-family: 'Courier New', Courier, monospace; white-space: pre-wrap; font-size: 12px; margin-bottom: 15px; line-height: 1.5; }
+                
+                .sig-table { width: 100%; border-collapse: collapse; margin-top: 40px; }
+                .sig-table td { border: none; padding: 10px; text-align: center; width: 50%; }
+                .sig-line { border-top: 1px solid #000; width: 80%; margin: 40px auto 5px auto; }
+                
+                .print-btn-container { text-align: right; margin-bottom: 20px; }
+                .print-btn { background: #103155; color: #fff; padding: 8px 16px; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; }
+            </style>
+        </head>
+        <body>
+            <div class="print-btn-container no-print">
+                <button class="print-btn" onclick="window.print()">Print Form</button>
+            </div>
+            
+            <table class="header-table">
+                <tr>
+                    <td style="font-weight: bold; font-size: 10px; text-transform: uppercase;">Republic of the Philippines</td>
+                </tr>
+                <tr>
+                    <td style="font-weight: bold; font-size: 10px; text-transform: uppercase;">National Police Commission</td>
+                </tr>
+                <tr>
+                    <td style="font-weight: bold; font-size: 13px; letter-spacing: 0.5px;">PHILIPPINE NATIONAL POLICE</td>
+                </tr>
+                <tr>
+                    <td style="font-weight: bold; font-size: 11px; text-transform: uppercase;">${report.municipality} Police Station</td>
+                </tr>
+                <tr>
+                    <td><div class="title">INCIDENT RECORD FORM (IRF)</div></td>
+                </tr>
+            </table>
+            
+            <table class="form-table">
+                <tr>
+                    <td style="width: 35%;">
+                        <span class="label">Blotter Entry Number</span>
+                        <span class="value" style="font-weight: bold; font-size: 12px; color: #b91c1c;">${data.entryNo}</span>
+                    </td>
+                    <td style="width: 35%;">
+                        <span class="label">Date & Time Reported</span>
+                        <span class="value">${new Date(report.datetime_reported || report.datetime).toLocaleString()}</span>
+                    </td>
+                    <td style="width: 30%;">
+                        <span class="label">Incident Type</span>
+                        <span class="value" style="font-weight: bold;">${data.incidentType}</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <span class="label">Date & Time of Occurrence</span>
+                        <span class="value">${new Date(data.datetimeOccurrence).toLocaleString()}</span>
+                    </td>
+                    <td colspan="2">
+                        <span class="label">Place of Occurrence</span>
+                        <span class="value">${data.street}, ${report.location}, ${report.municipality}</span>
+                    </td>
+                </tr>
+            </table>
+            
+            <div class="section-header">Item A: Reporting Person (Complainant)</div>
+            <table class="form-table">
+                <tr>
+                    <td style="width: 30%;">
+                        <span class="label">Last Name</span>
+                        <span class="value">${data.repLastName}</span>
+                    </td>
+                    <td style="width: 30%;">
+                        <span class="label">First Name</span>
+                        <span class="value">${data.repFirstName}</span>
+                    </td>
+                    <td style="width: 25%;">
+                        <span class="label">Middle Name</span>
+                        <span class="value">${data.repMiddleName || 'N/A'}</span>
+                    </td>
+                    <td style="width: 15%;">
+                        <span class="label">Nickname</span>
+                        <span class="value">${data.repNickname || 'N/A'}</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <span class="label">Citizenship</span>
+                        <span class="value">${data.repCitizenship || 'Filipino'}</span>
+                    </td>
+                    <td>
+                        <span class="label">Age & Gender</span>
+                        <span class="value">${data.repAge} yrs old / ${data.repGender}</span>
+                    </td>
+                    <td>
+                        <span class="label">Civil Status</span>
+                        <span class="value">${data.repCivilStatus || 'Single'}</span>
+                    </td>
+                    <td>
+                        <span class="label">Contact Number</span>
+                        <span class="value">${data.repContact || 'N/A'}</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2">
+                        <span class="label">Current Address</span>
+                        <span class="value">${data.repAddress}</span>
+                    </td>
+                    <td>
+                        <span class="label">Email Address</span>
+                        <span class="value">${data.repEmail || 'N/A'}</span>
+                    </td>
+                    <td>
+                        <span class="label">Occupation</span>
+                        <span class="value">${data.repOccupation || 'N/A'}</span>
+                    </td>
+                </tr>
+            </table>
+            
+            <div class="section-header">Item B: Suspect's Data</div>
+            <table class="form-table">
+                <tr>
+                    <td style="width: 30%;">
+                        <span class="label">Last Name</span>
+                        <span class="value">${data.susLastName || 'UNKNOWN'}</span>
+                    </td>
+                    <td style="width: 30%;">
+                        <span class="label">First Name</span>
+                        <span class="value">${data.susFirstName || 'UNKNOWN'}</span>
+                    </td>
+                    <td style="width: 25%;">
+                        <span class="label">Middle Name</span>
+                        <span class="value">${data.susMiddleName || 'N/A'}</span>
+                    </td>
+                    <td style="width: 15%;">
+                        <span class="label">Nickname</span>
+                        <span class="value">${data.susNickname || 'N/A'}</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <span class="label">Age & Gender</span>
+                        <span class="value">${data.susAge ? data.susAge + ' yrs old' : 'N/A'} / ${data.susGender || 'N/A'}</span>
+                    </td>
+                    <td>
+                        <span class="label">Influence Level (Drugs/Liquor)</span>
+                        <span class="value">${data.susInfluence || 'Neither'}</span>
+                    </td>
+                    <td colspan="2">
+                        <span class="label">Address</span>
+                        <span class="value">${data.susAddress || 'N/A'}</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2">
+                        <span class="label">Physical Description</span>
+                        <span class="value">${data.susPhysical || 'N/A'}</span>
+                    </td>
+                    <td colspan="2">
+                        <span class="label">Distinguishing Marks</span>
+                        <span class="value">${data.susMarks || 'N/A'}</span>
+                    </td>
+                </tr>
+            </table>
+            
+            <div class="section-header">Item C: Victim's Data (BioID Verified)</div>
+            <table class="form-table">
+                <tr>
+                    <td style="width: 30%;">
+                        <span class="label">Last Name</span>
+                        <span class="value">${data.vicLastName}</span>
+                    </td>
+                    <td style="width: 30%;">
+                        <span class="label">First Name</span>
+                        <span class="value">${data.vicFirstName}</span>
+                    </td>
+                    <td style="width: 25%;">
+                        <span class="label">Middle Name</span>
+                        <span class="value">${data.vicMiddleName || 'N/A'}</span>
+                    </td>
+                    <td style="width: 15%;">
+                        <span class="label">Nickname</span>
+                        <span class="value">${data.vicNickname || 'N/A'}</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <span class="label">Age & Gender</span>
+                        <span class="value">${data.vicAge} yrs old / ${data.vicGender}</span>
+                    </td>
+                    <td>
+                        <span class="label">Contact Number</span>
+                        <span class="value">${data.vicContact || 'N/A'}</span>
+                    </td>
+                    <td colspan="2">
+                        <span class="label">Current Address</span>
+                        <span class="value">${data.vicAddress}</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <span class="label">Blood Type (BioID)</span>
+                        <span class="value" style="font-weight: bold; color: #b91c1c;">${data.vicBloodType || 'Unknown'}</span>
+                    </td>
+                    <td>
+                        <span class="label">Medical Info / Remarks</span>
+                        <span class="value">${data.vicMedical || 'None'}</span>
+                    </td>
+                    <td colspan="2">
+                        <span class="label">Emergency Contact & Phone</span>
+                        <span class="value">${data.vicEmergencyName || 'N/A'} (${data.vicEmergencyPhone || 'N/A'})</span>
+                    </td>
+                </tr>
+            </table>
+            
+            <div class="section-header">Item D: Narrative of the Incident</div>
+            <div class="narrative-box">${data.narrative}</div>
+            
+            <table class="sig-table">
+                <tr>
+                    <td>
+                        <div class="sig-line"></div>
+                        <span style="font-size: 10px; font-weight: bold; text-transform: uppercase;">Signature of Complainant / Reporting Person</span>
+                    </td>
+                    <td>
+                        <div class="sig-line"></div>
+                        <span style="font-size: 10px; font-weight: bold; text-transform: uppercase;">Signature of Administering Officer</span>
+                        <div style="font-size: 11px; margin-top: 5px; font-weight: bold; text-transform: uppercase;">${report.reporting_officer}</div>
+                    </td>
+                </tr>
+            </table>
+        </body>
+        </html>
+        `;
+        
+        printWindow.document.write(html);
+        printWindow.document.close();
+    }
+
+    // Hook filters up to event listeners
+    const searchBlotterInput = document.getElementById('searchBlotter');
+    const filterBlotterTypeSelect = document.getElementById('filterBlotterType');
+    const filterBlotterStatusSelect = document.getElementById('filterBlotterStatus');
+
+    if (searchBlotterInput) {
+        searchBlotterInput.addEventListener('input', () => {
+            supabase.from('police_blotters').select('*').order('datetime_reported', { ascending: false }).then(({data}) => {
+                if (data) renderBlotters(data);
+            });
+        });
+    }
+    if (filterBlotterTypeSelect) {
+        filterBlotterTypeSelect.addEventListener('change', () => {
+            supabase.from('police_blotters').select('*').order('datetime_reported', { ascending: false }).then(({data}) => {
+                if (data) renderBlotters(data);
+            });
+        });
+    }
+    if (filterBlotterStatusSelect) {
+        filterBlotterStatusSelect.addEventListener('change', () => {
+            supabase.from('police_blotters').select('*').order('datetime_reported', { ascending: false }).then(({data}) => {
+                if (data) renderBlotters(data);
+            });
+        });
+    }
 
     // 9. VICTIM SCANNING LOGIC
     const scanVictimBtn = document.getElementById('scanVictimBtn');

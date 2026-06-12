@@ -37,6 +37,12 @@
                 </a>
             </li>
             <li>
+                <a href="#" data-tab="blotter">
+                    <i class='bx bx-detail'></i>
+                    <span class="links_name">Police Blotter</span>
+                </a>
+            </li>
+            <li>
                 <a href="#" data-tab="map">
                     <i class='bx bx-map-alt'></i>
                     <span class="links_name">High Risk Zones</span>
@@ -181,6 +187,85 @@
                 </div>
             </div>
 
+            <!-- BLOTTER TAB -->
+            <div id="blotterTab" class="tab-content">
+                <div class="box-white">
+                    <div class="title d-flex-between">
+                        <span>Incident Police Blotter</span>
+                        <button class="btn btn-primary" id="openAddBlotterBtn">
+                            <i class='bx bx-plus'></i> Add Blotter Entry
+                        </button>
+                    </div>
+                    
+                    <!-- Blotter Overview Stats -->
+                    <div class="overview-boxes" style="margin-top: 15px; margin-bottom: 25px; grid-template-columns: repeat(3, 1fr); gap: 15px;">
+                        <div class="box" style="min-height: 100px; padding: 15px; border-radius: 12px; height: 100px; align-items: center;">
+                            <div class="right-side">
+                                <div class="box-topic" style="font-size: 11px;">Total Blotter Entries</div>
+                                <div class="number" id="blotter-stats-total" style="font-size: 20px; margin: 2px 0;">0</div>
+                            </div>
+                            <i class='bx bx-receipt cart' style="font-size: 24px; width: 40px; height: 40px;"></i>
+                        </div>
+                        <div class="box" style="min-height: 100px; padding: 15px; border-radius: 12px; height: 100px; align-items: center;">
+                            <div class="right-side">
+                                <div class="box-topic" style="font-size: 11px;">Under Investigation</div>
+                                <div class="number" id="blotter-stats-pending" style="font-size: 20px; margin: 2px 0;">0</div>
+                            </div>
+                            <i class='bx bx-time cart' style="font-size: 24px; width: 40px; height: 40px; background: #FEF3C7; color: #D97706;"></i>
+                        </div>
+                        <div class="box" style="min-height: 100px; padding: 15px; border-radius: 12px; height: 100px; align-items: center;">
+                            <div class="right-side">
+                                <div class="box-topic" style="font-size: 11px;">Resolved Cases</div>
+                                <div class="number" id="blotter-stats-resolved" style="font-size: 20px; margin: 2px 0;">0</div>
+                            </div>
+                            <i class='bx bx-check-shield cart' style="font-size: 24px; width: 40px; height: 40px; background: #DCFCE7; color: #16A34A;"></i>
+                        </div>
+                    </div>
+                    
+                    <!-- Search and filters for blotter -->
+                    <div class="filter-row mt-3 mb-3" style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+                        <input type="text" id="searchBlotter" placeholder="Search by Complainant / Victim / Suspect Name..." style="padding: 10px 15px; border-radius: 10px; border: 1px solid #CBD5E1; font-size: 14px; flex: 1; min-width: 250px; outline: none; height: 42px;">
+                        <select id="filterBlotterType" style="padding: 8px 10px; border-radius: 10px; border: 1px solid #CBD5E1; outline: none; font-size: 14px; color: #475569; background: #F8FAFC; height: 42px; cursor: pointer; text-overflow: ellipsis; min-width: 180px;">
+                            <option value="">All Incident Types</option>
+                            <option value="Vehicular Accident">Vehicular Accident</option>
+                            <option value="Physical Injury">Physical Injury</option>
+                            <option value="Reckless Imprudence">Reckless Imprudence</option>
+                            <option value="Other">Other</option>
+                        </select>
+                        <select id="filterBlotterStatus" style="padding: 8px 10px; border-radius: 10px; border: 1px solid #CBD5E1; outline: none; font-size: 14px; color: #475569; background: #F8FAFC; height: 42px; cursor: pointer; text-overflow: ellipsis; min-width: 180px;">
+                            <option value="">All Statuses</option>
+                            <option value="Reported">Reported</option>
+                            <option value="Under Investigation">Under Investigation</option>
+                            <option value="Resolved">Resolved</option>
+                        </select>
+                    </div>
+
+                    <div class="table-responsive mt-4">
+                        <table class="reports-table">
+                            <thead>
+                                <tr>
+                                    <th>Entry No</th>
+                                    <th>Date Reported</th>
+                                    <th>Incident Type</th>
+                                    <th>Complainant</th>
+                                    <th>Victim Name</th>
+                                    <th>Suspect</th>
+                                    <th>Status</th>
+                                    <th style="text-align: center;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="blotterTableBody">
+                                <tr>
+                                    <td colspan="8" style="text-align: center; padding: 30px; color: #94A3B8;">
+                                        Loading blotter database...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
             <!-- MAP TAB -->
             <div id="mapTab" class="tab-content">
                 <div class="box-white" style="height: 700px;">
@@ -262,6 +347,8 @@
             </div>
         </div>
     </section>
+
+
 
     <!-- Accident Report Modal -->
     <div id="reportModal" class="modal-overlay">
@@ -360,7 +447,351 @@
             </div>
         </div>
     </div>
-    </section>
+
+    <!-- Police Blotter Entry Modal -->
+    <div id="blotterModal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 800px; width: 95%;">
+            <div class="modal-header d-flex-between">
+                <h3 class="title" id="blotterModalTitle" style="margin-bottom: 0;">Add Incident Blotter Entry</h3>
+                <i class='bx bx-x' id="closeBlotterBtn" style="font-size: 24px; cursor: pointer;"></i>
+            </div>
+            
+            <!-- Modal navigation tabs -->
+            <div class="modal-tabs" style="display: flex; border-bottom: 1px solid #E2E8F0; background: #F8FAFC; padding: 10px 20px 0 20px; gap: 5px;">
+                <button type="button" class="m-tab active" data-m-tab="incident-info">Incident Info</button>
+                <button type="button" class="m-tab" data-m-tab="reporting-info">Reporting Person</button>
+                <button type="button" class="m-tab" data-m-tab="suspect-info">Suspect Details</button>
+                <button type="button" class="m-tab" data-m-tab="victim-info">Victim & Narrative</button>
+            </div>
+
+            <div class="modal-body" style="padding-top: 20px;">
+                <form id="blotterForm">
+                    <input type="hidden" id="blotterId">
+                    
+                    <!-- TAB 1: INCIDENT INFO -->
+                    <div id="m-tab-incident-info" class="m-tab-content active">
+                        <h4 class="form-section-title">Incident Details</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Blotter Entry Number</label>
+                                <input type="text" id="blotterEntryNo" placeholder="Auto-generated on save" readonly style="background: #F1F5F9; font-weight: 600;">
+                            </div>
+                            <div class="form-group">
+                                <label>Incident Type</label>
+                                <select id="blotterIncidentType" required>
+                                    <option value="Vehicular Accident" selected>Vehicular Accident</option>
+                                    <option value="Physical Injury">Physical Injury</option>
+                                    <option value="Reckless Imprudence">Reckless Imprudence</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                                <input type="text" id="blotterIncidentTypeOther" placeholder="Specify incident type" style="display: none; margin-top: 10px;">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Date & Time Reported</label>
+                                <input type="datetime-local" id="blotterDateTimeReported" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Date & Time of Occurrence</label>
+                                <input type="datetime-local" id="blotterDateTimeOccurrence" required>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Place of Occurrence (Barangay)</label>
+                                <select id="blotterBrgy" required>
+                                    <option value="" disabled selected>Select Barangay</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Street / Sitio / Exact Location</label>
+                                <input type="text" id="blotterStreet" placeholder="e.g. Km 45, National Highway" required>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Severity Level</label>
+                                <select id="blotterSeverity" required>
+                                    <option value="Minor">Minor</option>
+                                    <option value="Moderate">Moderate</option>
+                                    <option value="Severe">Severe</option>
+                                    <option value="Critical">Critical</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Current Status / Disposition</label>
+                                <select id="blotterStatus" required>
+                                    <option value="Reported">Reported</option>
+                                    <option value="Under Investigation">Under Investigation</option>
+                                    <option value="Resolved">Resolved</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB 2: REPORTING PERSON (Item A) -->
+                    <div id="m-tab-reporting-info" class="m-tab-content">
+                        <h4 class="form-section-title">Complainant / Reporting Person</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>First Name</label>
+                                <input type="text" id="repFirstName" placeholder="Enter first name" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Last Name</label>
+                                <input type="text" id="repLastName" placeholder="Enter last name" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Middle Name</label>
+                                <input type="text" id="repMiddleName" placeholder="Enter middle name" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Nickname / Alias</label>
+                                <input type="text" id="repNickname" placeholder="Enter nickname" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Age</label>
+                                <input type="number" id="repAge" placeholder="Age" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Gender</label>
+                                <select id="repGender" required>
+                                    <option value="" disabled selected>Select Gender</option>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Civil Status</label>
+                                <select id="repCivilStatus" required>
+                                    <option value="" disabled selected>Select Civil Status</option>
+                                    <option value="Single">Single</option>
+                                    <option value="Married">Married</option>
+                                    <option value="Widowed">Widowed</option>
+                                    <option value="Separated">Separated</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Citizenship</label>
+                                <input type="text" id="repCitizenship" value="Filipino" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Contact Number</label>
+                                <input type="text" id="repContact" placeholder="09xxxxxxxxx" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Email Address</label>
+                                <input type="email" id="repEmail" placeholder="email@example.com" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Full Address</label>
+                            <input type="text" id="repAddress" placeholder="House No, Street, Barangay, Town, Province" required>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Occupation</label>
+                                <input type="text" id="repOccupation" placeholder="e.g. Driver, Employee" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Highest Educational Attainment</label>
+                                <input type="text" id="repEducation" placeholder="e.g. High School, College Graduate" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB 3: SUSPECT DETAILS (Item B) -->
+                    <div id="m-tab-suspect-info" class="m-tab-content">
+                        <h4 class="form-section-title">Suspect Information</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>First Name</label>
+                                <input type="text" id="susFirstName" placeholder="Enter first name or 'Unknown'" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Last Name</label>
+                                <input type="text" id="susLastName" placeholder="Enter last name or 'Unknown'" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Middle Name</label>
+                                <input type="text" id="susMiddleName" placeholder="Enter middle name" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Nickname / Alias</label>
+                                <input type="text" id="susNickname" placeholder="Enter nickname" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Age</label>
+                                <input type="number" id="susAge" placeholder="Age" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Gender</label>
+                                <select id="susGender" required>
+                                    <option value="" disabled selected>Select Gender</option>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Influence Level</label>
+                                <select id="susInfluence" required>
+                                    <option value="" disabled selected>Select Influence Level</option>
+                                    <option value="Neither">Neither (Sober)</option>
+                                    <option value="Liquor">Liquor (Alcohol)</option>
+                                    <option value="Drugs">Drugs</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Full Address</label>
+                            <input type="text" id="susAddress" placeholder="House No, Street, Barangay, Town, Province" required>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Physical Description & Clothing</label>
+                                <input type="text" id="susPhysical" placeholder="e.g. 5'8&quot;, athletic built, wearing black t-shirt" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Distinguishing Marks / Scars</label>
+                                <input type="text" id="susMarks" placeholder="e.g. tattoo on right neck, scar on left cheek" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB 4: VICTIM & NARRATIVE (Item C & D) -->
+                    <div id="m-tab-victim-info" class="m-tab-content">
+                        <!-- Biometric Scanning Section for Victim -->
+                        <h4 class="form-section-title">Victim Details</h4>
+                        
+                        <div class="biometric-scan-section box-white" id="blotterBiometricSection"
+                            style="background: #F8FAFC; border: 2px dashed #E2E8F0; padding: 15px; margin-bottom: 20px; text-align: center; border-radius: 12px;">
+                            <div id="blotterScannerInitialState">
+                                <button type="button" class="btn btn-primary" id="blotterScanVictimBtn" style="background: #103155; padding: 8px 16px; font-size: 13px;">
+                                    <i class='bx bx-fingerprint'></i> Scan Victim Fingerprint
+                                </button>
+                                <span style="display: block; font-size: 11px; color: #64748B; margin-top: 5px;">Click to pair scanner and automatically load resident victim details.</span>
+                            </div>
+                            <div id="blotterVerifiedState" style="display: none; flex-direction: column; align-items: center; gap: 5px; padding: 5px;">
+                                <div style="font-size: 36px; color: #10B981; filter: drop-shadow(0 0 10px rgba(16, 185, 129, 0.3));">
+                                    <i class='bx bx-fingerprint'></i>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 5px; color: #10B981; font-weight: 800; font-size: 12px; letter-spacing: 0.5px;">
+                                    <i class='bx bxs-check-shield'></i> BIOMETRICS IDENTIFIED
+                                </div>
+                                <button type="button" id="blotterClearScanBtn" class="btn-retry" style="background: #EF4444; color: white; border: none; padding: 4px 10px; border-radius: 6px; font-size: 10px; cursor: pointer; margin-top: 5px;">
+                                    Clear Scan & Enter Manually
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Victim Fields -->
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>First Name</label>
+                                <input type="text" id="vicFirstName" placeholder="Enter first name" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Last Name</label>
+                                <input type="text" id="vicLastName" placeholder="Enter last name" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Middle Name</label>
+                                <input type="text" id="vicMiddleName" placeholder="Enter middle name" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Nickname / Alias</label>
+                                <input type="text" id="vicNickname" placeholder="Enter nickname" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Age</label>
+                                <input type="number" id="vicAge" placeholder="Age" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Gender</label>
+                                <select id="vicGender" required>
+                                    <option value="" disabled selected>Select Gender</option>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Contact Number</label>
+                                <input type="text" id="vicContact" placeholder="09xxxxxxxxx" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Full Address</label>
+                            <input type="text" id="vicAddress" placeholder="House No, Street, Barangay, Town, Province" required>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Blood Type</label>
+                                <input type="text" id="vicBloodType" placeholder="e.g. O+, A- (Auto-filled if scanned)" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Medical Info / Allergies</label>
+                                <input type="text" id="vicMedical" placeholder="Medical details (Auto-filled if scanned)" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Emergency Contact Person</label>
+                                <input type="text" id="vicEmergencyName" placeholder="Emergency contact name" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Emergency Phone</label>
+                                <input type="text" id="vicEmergencyPhone" placeholder="Emergency contact phone" required>
+                            </div>
+                        </div>
+
+                        <!-- Item D: Narrative -->
+                        <h4 class="form-section-title">Narrative of the Incident</h4>
+                        <div class="form-group">
+                            <label>Narrative Statement</label>
+                            <textarea id="blotterNarrative" class="textarea-auto" rows="6" placeholder="Describe the incident in detail (Who, What, When, Where, Why, and How)..." required style="min-height: 120px;"></textarea>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Administering Police Officer</label>
+                                <input type="text" id="blotterOfficer" readonly style="background: #F1F5F9; font-weight: 600;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-actions mt-4">
+                        <button type="button" class="btn btn-cancel" id="cancelBlotterBtn">
+                            Cancel
+                        </button>
+                        <button type="submit" class="btn btn-primary" id="saveBlotterBtn">
+                            Save Blotter Entry
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 
     <!-- Resident Registration Modal -->
     <div id="residentModal" class="modal-overlay">
