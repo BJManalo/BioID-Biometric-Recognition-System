@@ -689,10 +689,9 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 // MDRRMO
                 const res = await supabase
-                    .from('system_users')
+                    .from('mdrrmo')
                     .insert([{
                         username: username,
-                        role: 'MDRRMO',
                         first_name: firstName,
                         last_name: lastName,
                         assigned_municipality: municipality,
