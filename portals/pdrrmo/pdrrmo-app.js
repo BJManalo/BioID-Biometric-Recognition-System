@@ -360,7 +360,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     if (closeAccountModal) {
         closeAccountModal.addEventListener('click', () => {
-            if (accountFormModal) accountFormModal.style.display = 'none';
+            cancelFormBtn.click();
         });
     }
 
@@ -564,7 +564,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const tempPasswordInput = document.getElementById('tempPasswordInput');
 
         if (officerNameInput) officerNameInput.value = '';
-        if (usernameInput) usernameInput.value = '';
+        if (usernameInput) {
+            usernameInput.value = '';
+            usernameInput.readOnly = false;
+            usernameInput.style.background = '';
+            usernameInput.style.color = '';
+        }
         if (contactNumberInput) contactNumberInput.value = '';
         if (municipalitySelect) {
             municipalitySelect.value = '';
@@ -615,20 +620,31 @@ document.addEventListener('DOMContentLoaded', () => {
             usernameInput.value = 'Generating...';
             
             try {
-                let count = window.allPoliceAccounts ? window.allPoliceAccounts.filter(a => a.municipality === muni && a.role === role).length : 0;
-                
-                let nextNum = count + 1;
-                let suffix = role === 'MDRRMO' ? 'Mdrrmo' : 'Police';
-                let generatedId = `${strippedMuni}${suffix}${nextNum}`;
-                
-                // Guarantee uniqueness by checking all existing usernames
-                while (window.allPoliceAccounts && window.allPoliceAccounts.some(a => a.username.toLowerCase() === generatedId.toLowerCase())) {
-                    nextNum++;
-                    generatedId = `${strippedMuni}${suffix}${nextNum}`;
+                if (role === 'MDRRMO') {
+                    const generatedId = `${strippedMuni}MDRRMO`;
+                    usernameInput.value = generatedId;
+                    tempPasswordInput.value = generatedId;
+                    usernameInput.readOnly = true;
+                    usernameInput.style.background = '#F8FAFC';
+                    usernameInput.style.color = '#64748B';
+                } else {
+                    let count = window.allPoliceAccounts ? window.allPoliceAccounts.filter(a => a.municipality === muni && a.role === role).length : 0;
+                    
+                    let nextNum = count + 1;
+                    let generatedId = `${strippedMuni}Police${nextNum}`;
+                    
+                    // Guarantee uniqueness by checking all existing usernames
+                    while (window.allPoliceAccounts && window.allPoliceAccounts.some(a => a.username.toLowerCase() === generatedId.toLowerCase())) {
+                        nextNum++;
+                        generatedId = `${strippedMuni}Police${nextNum}`;
+                    }
+                    
+                    usernameInput.value = generatedId;
+                    tempPasswordInput.value = generatedId;
+                    usernameInput.readOnly = false;
+                    usernameInput.style.background = '';
+                    usernameInput.style.color = '';
                 }
-                
-                usernameInput.value = generatedId;
-                tempPasswordInput.value = generatedId;
             } catch (err) {
                 console.error('Error in auto-generating ID:', err);
                 usernameInput.value = '';
@@ -719,7 +735,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Clean up and hide form
         if (officerNameInput) officerNameInput.value = '';
-        if (usernameInput) usernameInput.value = '';
+        if (usernameInput) {
+            usernameInput.value = '';
+            usernameInput.readOnly = false;
+            usernameInput.style.background = '';
+            usernameInput.style.color = '';
+        }
         if (contactNumberInput) contactNumberInput.value = '';
         if (tempPasswordInput) tempPasswordInput.value = '';
         if (municipalitySelectElement) {
