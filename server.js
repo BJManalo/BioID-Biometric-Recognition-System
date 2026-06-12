@@ -36,8 +36,8 @@ app.post('/api/log', (req, res) => {
 // 1. Unified Login (Fallback if frontend calls it)
 app.post('/api/auth/login', async (req, res) => {
     const { username, password } = req.body;
-    let { data: adminUser } = await supabase.from('system_users').select('*').ilike('username', username).eq('temp_password', password).maybeSingle();
-    if (adminUser) return res.json({ user: adminUser, role: adminUser.role });
+    let { data: adminUser } = await supabase.from('system_users').select('*').ilike('username', username).eq('temp_password', password).eq('role', 'PDRRMO').maybeSingle();
+    if (adminUser) return res.json({ user: adminUser, role: 'PDRRMO' });
 
     let { data: mdrrmoUser } = await supabase.from('mdrrmo').select('*').ilike('username', username).eq('temp_password', password).maybeSingle();
     if (mdrrmoUser) return res.json({ user: mdrrmoUser, role: 'MDRRMO' });

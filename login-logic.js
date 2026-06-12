@@ -64,12 +64,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     .select('*')
                     .ilike('username', username)
                     .eq('temp_password', password)
+                    .eq('role', 'PDRRMO')
                     .maybeSingle();
 
                 if (adminUser) {
                     userData = adminUser;
-                    userRole = adminUser.role; // PDRRMO or Admin
-                    userData.role = userRole;
+                    userRole = 'PDRRMO';
+                    userData.role = 'PDRRMO';
                 } else {
                     // 1.1 Check mdrrmo table
                     const { data: mdrrmoUser } = await supabase
@@ -83,7 +84,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         userData = mdrrmoUser;
                         userRole = 'MDRRMO';
                         userData.role = 'MDRRMO';
-                        userData.municipality = mdrrmoUser.assigned_municipality || '';
+                        userData.municipality = mdrrmoUser.assigned_municipality || mdrrmoUser.municipality || '';
                     } else {
                         // 1.2 Check barangays table
                         const { data: brgyUser } = await supabase
@@ -97,7 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             userData = brgyUser;
                             userRole = 'BARANGAY';
                             userData.role = 'BARANGAY';
-                            userData.municipality = brgyUser.municipality || '';
+                            userData.municipality = brgyUser.municipality || brgyUser.assigned_municipality || '';
                             userData.barangay = brgyUser.barangay || '';
                         } else {
                             // 2. Check police_accounts
