@@ -624,7 +624,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Auto-fill Username and Password based on Municipality and Role
     const municipalitySelect = document.getElementById('municipalitySelect');
-    const roleSelect = document.getElementById('roleSelect');
 
     function generateUserCredentials() {
         if (!municipalitySelect) return;
