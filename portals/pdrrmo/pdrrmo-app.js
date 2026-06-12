@@ -353,6 +353,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const accountFormModal = document.getElementById('accountFormModal');
     const closeAccountModal = document.getElementById('closeAccountModal');
     const roleSelect = document.getElementById('roleSelect');
+    const saveAccountBtn = document.getElementById('saveAccountBtn');
 
     if (addPoliceBtn) {
         addPoliceBtn.addEventListener('click', () => {
@@ -360,6 +361,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 roleSelect.value = 'POLICE';
                 roleSelect.disabled = true;
                 generateUserCredentials();
+            }
+            if (saveAccountBtn) {
+                saveAccountBtn.className = 'btn btn-blue';
             }
             if (accountFormModal) {
                 accountFormModal.style.display = 'flex';
@@ -374,6 +378,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 roleSelect.disabled = true;
                 generateUserCredentials();
             }
+            if (saveAccountBtn) {
+                saveAccountBtn.className = 'btn btn-warning';
+            }
             if (accountFormModal) {
                 accountFormModal.style.display = 'flex';
             }
@@ -387,7 +394,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // MOCK ACCOUNT CREATION AND EDITING HANDLING
-    const saveAccountBtn = document.getElementById('saveAccountBtn');
 
     // --- UNIFIED ACCOUNTS LOGIC ---
     const accountsTableBody = document.getElementById('accountsTableBody');
@@ -578,6 +584,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Reset edit states and clear inputs
         saveAccountBtn.textContent = 'Create Account';
+        saveAccountBtn.className = 'btn btn-warning';
 
         const officerNameInput = document.getElementById('officerName');
         const usernameInput = document.getElementById('usernameInput');
@@ -779,6 +786,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (accountFormModal) accountFormModal.style.display = 'none';
 
         saveAccountBtn.textContent = 'Create Account';
+        saveAccountBtn.className = 'btn btn-warning';
         saveAccountBtn.disabled = false;
     });
 
