@@ -1595,111 +1595,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     });
 
-    // --- BARANGAY ACCOUNTS MANAGEMENT ---
-    const brgySelect = document.getElementById('brgySelect');
-    if (brgySelect && assignedJurisdiction) {
-        const barangays = antiqueData[assignedJurisdiction] || [];
-        barangays.sort().forEach(brgy => {
-            const opt = document.createElement('option');
-            opt.value = brgy;
-            opt.textContent = brgy;
-            brgySelect.appendChild(opt);
-        });
-    }
-
-    if (brgySelect) {
-        brgySelect.addEventListener('change', () => {
-            const brgy = brgySelect.value;
-            const strippedBrgy = brgy.replace(/\s+/g, '');
-            const strippedMuni = assignedJurisdiction.replace(/\s+/g, '');
-            
-            const usernameInput = document.getElementById('brgyUsername');
-            const tempPasswordInput = document.getElementById('brgyPassword');
-            
-            if (usernameInput && tempPasswordInput) {
-                const generatedId = `${strippedMuni}_${strippedBrgy}_Brgy`;
-                usernameInput.value = generatedId;
-                tempPasswordInput.value = generatedId;
-            }
-        });
-    }
-
-    const openAddBarangayBtn = document.getElementById('openAddBarangayBtn');
-    const closeBarangayBtn = document.getElementById('closeBarangayBtn');
-    const cancelBarangayBtn = document.getElementById('cancelBarangayBtn');
-    const barangayModal = document.getElementById('barangayModal');
-    const barangayForm = document.getElementById('barangayForm');
-
-    if (openAddBarangayBtn && barangayModal) {
-        openAddBarangayBtn.onclick = () => {
-            if (barangayForm) barangayForm.reset();
-            const usernameInput = document.getElementById('brgyUsername');
-            const tempPasswordInput = document.getElementById('brgyPassword');
-            if (usernameInput) usernameInput.value = '';
-            if (tempPasswordInput) tempPasswordInput.value = '';
-            barangayModal.classList.add('show');
-        };
-    }
-    if (closeBarangayBtn && barangayModal) {
-        closeBarangayBtn.onclick = () => barangayModal.classList.remove('show');
-    }
-    if (cancelBarangayBtn && barangayModal) {
-        cancelBarangayBtn.onclick = () => barangayModal.classList.remove('show');
-    }
-
-    if (barangayForm) {
-        barangayForm.onsubmit = async (e) => {
-            e.preventDefault();
-            
-            const brgy = document.getElementById('brgySelect').value;
-            const firstName = document.getElementById('brgyFirstName').value.trim();
-            const lastName = document.getElementById('brgyLastName').value.trim();
-            const contact = document.getElementById('brgyContact').value.trim();
-            const username = document.getElementById('brgyUsername').value;
-            const password = document.getElementById('brgyPassword').value;
-            
-            const saveBtn = document.getElementById('saveBarangayBtn');
-            const originalText = saveBtn.textContent;
-            saveBtn.textContent = 'Saving...';
-            saveBtn.disabled = true;
-            
-            try {
-                // Insert into system_users
-                const { data, error } = await supabase
-                    .from('system_users')
-                    .insert([{
-                        username: username,
-                        role: 'BARANGAY',
-                        first_name: firstName,
-                        last_name: lastName,
-                        assigned_municipality: `${assignedJurisdiction}:${brgy}`,
-                        contact_number: contact,
-                        temp_password: password
-                    }])
-                    .select();
-                    
-                if (error) throw error;
-                
-                showCustomAlert("Barangay account created successfully!", "success", "Account Created");
-                barangayModal.classList.remove('show');
-                await fetchBarangayAccounts();
-            } catch (err) {
-                console.error(err);
-                showCustomAlert("Error: " + err.message, "error", "Registration Error");
-            } finally {
-                saveBtn.textContent = originalText;
-                saveBtn.disabled = false;
-            }
-        };
-    }
-
+    // --- BARANGAY ACCOUNTS MANAGEMENT (READ-ONLY) ---
     async function fetchBarangayAccounts() {
         const tableBody = document.getElementById('barangayTableBody');
         if (!tableBody) return;
         
         tableBody.innerHTML = `
             <tr>
-                <td colspan="5" style="text-align: center; padding: 30px; color: #94A3B8;">
+                <td colspan="4" style="text-align: center; padding: 30px; color: #94A3B8;">
                     <i class='bx bx-loader-alt bx-spin' style="font-size: 24px; display: block; margin-bottom: 10px;"></i>
                     Loading barangay accounts...
                 </td>
@@ -1708,10 +1611,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         try {
             const { data, error } = await supabase
-                .from('system_users')
+                .from('barangays')
                 .select('*')
-                .eq('role', 'BARANGAY')
-                .like('assigned_municipality', `${assignedJurisdiction}:%`);
+                .eq('municipality', assignedJurisdiction);
                 
             if (error) throw error;
             
@@ -1719,7 +1621,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (!data || data.length === 0) {
                 tableBody.innerHTML = `
                     <tr>
-                        <td colspan="5" style="text-align: center; padding: 30px; color: #94A3B8;">
+                        <td colspan="4" style="text-align: center; padding: 30px; color: #94A3B8;">
                             No Barangay accounts registered for this municipality.
                         </td>
                     </tr>
@@ -1728,51 +1630,24 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
             
             data.forEach(acc => {
-                const brgyName = (acc.assigned_municipality || '').split(':')[1] || 'Unknown';
                 const row = document.createElement('tr');
                 row.innerHTML = `
-                    <td>${brgyName}</td>
+                    <td>${acc.barangay}</td>
                     <td>@${acc.username}</td>
                     <td>${acc.first_name} ${acc.last_name}</td>
                     <td>${acc.contact_number || 'N/A'}</td>
-                    <td style="text-align: right; padding-right: 20px;">
-                        <button class="btn-action btn-delete" data-id="${acc.id}" title="Delete" style="background: transparent; border: none; color: #EF4444; cursor: pointer; font-size: 16px;"><i class='bx bx-trash'></i></button>
-                    </td>
                 `;
-                
-                row.querySelector('.btn-delete').onclick = () => deleteBarangayAccount(acc.id);
                 tableBody.appendChild(row);
             });
         } catch (err) {
             console.error(err);
             tableBody.innerHTML = `
                 <tr>
-                    <td colspan="5" style="text-align: center; padding: 30px; color: #EF4444;">
+                    <td colspan="4" style="text-align: center; padding: 30px; color: #EF4444;">
                         Error loading accounts: ${err.message}
                     </td>
                 </tr>
             `;
         }
-    }
-
-    async function deleteBarangayAccount(id) {
-        showCustomConfirm(
-            "Are you sure you want to delete this Barangay account? This action cannot be undone.",
-            "Delete Account",
-            async () => {
-                try {
-                    const { error } = await supabase
-                        .from('system_users')
-                        .delete()
-                        .eq('id', id);
-                    if (error) throw error;
-                    showCustomAlert("Account deleted successfully.", "success", "Deleted");
-                    await fetchBarangayAccounts();
-                } catch (err) {
-                    console.error(err);
-                    showCustomAlert("Delete failed.", "error", "Error");
-                }
-            }
-        );
     }
 });
